@@ -1,0 +1,500 @@
+datasource db {
+  provider  = "postgresql"
+}
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+model Pest {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  text      String
+  images    String[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pests")
+}
+
+model Disease {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  images    String[]
+  text      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("diseases")
+}
+
+model Farm {
+  id            String               @id @default(cuid())
+  name          String
+  locationText  String?              @map("location_text")
+  latitude      Float?
+  longitude     Float?
+  farmerId      String               @map("farmer_id")
+  cooperativeId String?              @map("cooperative_id")
+  farmer        Farmer               @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  cooperative   Cooperative?         @relation(fields: [cooperativeId], references: [id], onDelete: SetNull)
+  flocks        Flock[]
+  metrics       FarmMetric[]
+  alerts        FarmAlert[]
+  decisions     AgentDecision[]
+  voiceLogs     VoiceLog[]
+  officers      FarmOfficer[]
+  saleRecommendations SaleRecommendation[]  // ← add
+  healthEvents        HealthEvent[]         // ← add
+  createdAt     DateTime             @default(now()) @map("created_at")
+  updatedAt     DateTime             @updatedAt @map("updated_at")
+
+  @@index([farmerId])
+  @@index([cooperativeId])
+  @@map("farms")
+}
+
+model Flock {
+  id               String               @id @default(cuid())
+  farmId           String               @map("farm_id")
+  name             String
+  type             FlockType
+  initialBirdCount Int                  @map("initial_bird_count")
+  currentBirdCount Int                  @map("current_bird_count")
+  startDate        DateTime?            @map("start_date")
+  farm             Farm                 @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  metrics          FarmMetric[]
+  alerts           FarmAlert[]
+  decisions        AgentDecision[]
+  saleRecommendations SaleRecommendation[]
+  healthEvents     HealthEvent[]
+  voiceLogs        VoiceLog[]           // ← add
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+
+  @@index([farmId])
+  @@map("flocks")
+}
+
+model FarmMetric {
+  id             String       @id @default(cuid())
+  farmId         String       @map("farm_id")
+  flockId        String?      @map("flock_id")
+  recordedAt     DateTime     @default(now()) @map("recorded_at")
+  feedKg         Float?       @map("feed_kg")
+  waterLiters    Float?       @map("water_liters")
+  eggsCollected  Int?         @map("eggs_collected")
+  mortalityCount Int?         @map("mortality_count")
+  temperatureC   Float?       @map("temperature_c")
+  humidityPct    Float?       @map("humidity_pct")
+  avgWeightKg    Float?       @map("avg_weight_kg")
+  notes          String?
+  source         MetricSource @default(MANUAL)
+  farm           Farm         @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  flock          Flock?       @relation(fields: [flockId], references: [id], onDelete: SetNull)
+
+  @@index([farmId, recordedAt])
+  @@index([flockId, recordedAt])
+  @@map("farm_metrics")
+}
+
+model FarmAlert {
+  id             String        @id @default(cuid())
+  farmId         String        @map("farm_id")
+  flockId        String?       @map("flock_id")
+  type           AlertType
+  severity       AlertSeverity
+  status         AlertStatus   @default(OPEN)
+  title          String
+  description    String
+  autoTriggered  Boolean       @default(false) @map("auto_triggered")
+  triggerMetric  String?       @map("trigger_metric")
+  thresholdValue Float?        @map("threshold_value")
+  currentValue   Float?        @map("current_value")
+  triggeredAt    DateTime      @default(now()) @map("triggered_at")
+  resolvedAt     DateTime?     @map("resolved_at")
+  farm           Farm          @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  flock          Flock?        @relation(fields: [flockId], references: [id], onDelete: SetNull)
+  decisions      AgentDecision[]
+
+  @@index([farmId, status, triggeredAt])
+  @@index([flockId, status])
+  @@map("farm_alerts")
+}
+
+model AgentDecision {
+  id                String               @id @default(cuid())
+  farmId            String               @map("farm_id")
+  flockId           String?              @map("flock_id")
+  alertId           String?              @map("alert_id")
+  cycleStep         AgentCycleStep       @default(PERCEIVE) @map("cycle_step")
+  priority          Int                  @default(1)
+  decisionTitle     String               @map("decision_title")
+  reasoning         String
+  recommendedAction String               @map("recommended_action")
+  actionStatus      DecisionActionStatus @default(PENDING) @map("action_status")
+  executedAt        DateTime?            @map("executed_at")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  farm              Farm                 @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  flock             Flock?               @relation(fields: [flockId], references: [id], onDelete: SetNull)
+  alert             FarmAlert?           @relation(fields: [alertId], references: [id], onDelete: SetNull)
+
+  @@index([farmId, createdAt])
+  @@index([flockId, createdAt])
+  @@index([alertId])
+  @@map("agent_decisions")
+}
+
+model VoiceLog {
+  id             String      @id @default(cuid())
+  farmId         String      @map("farm_id")
+  flockId        String?     @map("flock_id")
+  inputText      String      @map("input_text")
+  normalizedText String?     @map("normalized_text")
+  locale         String      @default("en-KE")
+  source         VoiceSource @default(WEB_SPEECH)
+  createdAt      DateTime    @default(now()) @map("created_at")
+  farm           Farm        @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  flock          Flock?      @relation(fields: [flockId], references: [id], onDelete: SetNull)
+
+  @@index([farmId, createdAt])
+  @@index([flockId, createdAt])
+  @@map("voice_logs")
+}
+
+model SaleRecommendation {
+  id                   String               @id @default(cuid())
+  farmId               String               @map("farm_id")
+  flockId              String               @map("flock_id")
+  recommendedDate      DateTime             @map("recommended_date")
+  recommendedWindowDays Int?                @map("recommended_window_days")
+  expectedPricePerKg   Float?               @map("expected_price_per_kg")
+  confidenceScore      Float?               @map("confidence_score")
+  rationale            String
+  status               RecommendationStatus @default(ACTIVE)
+  createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @updatedAt @map("updated_at")
+  farm                 Farm                 @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  flock                Flock                @relation(fields: [flockId], references: [id], onDelete: Cascade)
+
+  @@index([farmId, recommendedDate])
+  @@index([flockId, recommendedDate])
+  @@map("sale_recommendations")
+}
+
+model HealthEvent {
+  id                   String        @id @default(cuid())
+  farmId               String        @map("farm_id")
+  flockId              String        @map("flock_id")
+  conditionName        String        @map("condition_name")
+  suspected            Boolean       @default(true)
+  severity             AlertSeverity?
+  recommendedTreatment String?       @map("recommended_treatment")
+  notes                String?
+  confirmedAt          DateTime?     @map("confirmed_at")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+  farm                 Farm          @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  flock                Flock         @relation(fields: [flockId], references: [id], onDelete: Cascade)
+
+  @@index([farmId, createdAt])
+  @@index([flockId, createdAt])
+  @@map("health_events")
+}
+
+model Farmer {
+  user              User        @relation(fields: [id], references: [id], onDelete: Cascade)
+  id                String      @id @map("farmer_id")
+  phone             String?
+  county            String?
+  subCounty         String?     @map("sub_county")
+  preferredLanguage String?     @default("en-KE") @map("preferred_language")
+  farms             Farm[]
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  @@map("farmers")
+}
+
+model ExtensionOfficer {
+  user                User         @relation(fields: [id], references: [id], onDelete: Cascade)
+  id                  String       @id @map("extension_officer_id")
+  organization        String?
+  county              String?
+  isVerified          Boolean      @default(false) @map("is_verified")
+  assignedFarms       FarmOfficer[]
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  @@map("extension_officers")
+}
+
+model CooperativeManager {
+  user         User          @relation(fields: [id], references: [id], onDelete: Cascade)
+  id           String        @id @map("cooperative_manager_id")
+  cooperativeId String?      @map("cooperative_id")
+  cooperative  Cooperative?  @relation(fields: [cooperativeId], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@map("cooperative_managers")
+}
+
+model Cooperative {
+  id          String               @id @default(cuid())
+  name        String               @unique
+  county      String?
+  farms       Farm[]
+  managers    CooperativeManager[]
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  @@map("cooperatives")
+}
+
+model FarmOfficer {
+  farmId      String            @map("farm_id")
+  officerId   String            @map("officer_id")
+  assignedAt  DateTime          @default(now()) @map("assigned_at")
+  farm        Farm              @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  officer     ExtensionOfficer  @relation(fields: [officerId], references: [id], onDelete: Cascade)
+
+  @@id([farmId, officerId])
+  @@map("farm_officers")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  role          Role?
+
+  customer   Customer?
+  consultant Consultant?
+  admin      Admin?
+  supplier   Supplier?
+  farmer             Farmer?
+  extensionOfficer   ExtensionOfficer?
+  cooperativeManager CooperativeManager?
+
+  @@map("users")
+}
+
+model Customer {
+  user User   @relation(fields: [id], references: [id], onDelete: Cascade)
+  id   String @unique @map("customer_id")
+
+  scan Scan[]
+
+  @@map("customers")
+}
+
+model Scan {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  tag         String?
+  url         String   @unique
+  createdAt   DateTime @default(now()) @map("created_at")
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId  String   @map("customer_id")
+  type        ScanType
+
+  @@map("scans")
+}
+
+model Consultant {
+  user                 User     @relation(fields: [id], references: [id], onDelete: Cascade)
+  id                   String   @unique @map("consultant_id")
+  isConsultantVerified Boolean? @default(false) @map("is_verified")
+
+  @@map("consultants")
+}
+
+model Supplier {
+  user            User              @relation(fields: [id], references: [id], onDelete: Cascade)
+  id              String            @id @default(cuid())
+  name            String            @unique
+  logo            String
+  address         String
+  phone           String
+  license         String
+  email           String
+  status          SupplierStatus?
+  approvedBy      String?           @map("approved_by")
+  approvedAt      DateTime?         @map("approved_at")
+  rejectedBy      String?           @map("rejected_by")
+  rejectedAt      DateTime?         @map("rejected_at")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  ProductSupplier ProductSupplier[] 
+
+  @@map("suppliers")
+}
+
+model Admin {
+  user User   @relation(fields: [id], references: [id], onDelete: Cascade)
+  id   String @id @unique @map("admin_id")
+
+  @@map("admins")
+}
+
+model Account {
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Product {
+  id              String            @id @default(cuid())
+  name            String            @unique
+  ProductSupplier ProductSupplier[]
+
+  @@map("products")
+}
+
+model ProductSupplier {
+  id          String   @unique @default(cuid())
+  country     String
+  city        String
+  region      String
+  countryCode String
+  currencySymbol String
+  price       Float
+  description String
+  images      String[]
+  productId   String
+  supplierId  String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@id([country, city, region, productId, supplierId])
+  @@map("product_suppliers")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  CONSULTANT
+  SUPPLIER
+  FARMER
+  EXTENSION_OFFICER
+  COOPERATIVE_MANAGER
+}
+
+enum FlockType {
+  BROILER
+  LAYER
+  KIENYEJI
+}
+
+enum MetricSource {
+  MANUAL
+  AUTO_TRIGGER
+  SENSOR
+  VOICE
+}
+
+enum AlertType {
+  WATER_LOW
+  HEAT_STRESS
+  MORTALITY_SPIKE
+  FEED_RISK
+  DISEASE_RISK
+  EGG_DROP
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum AgentCycleStep {
+  PERCEIVE
+  REASON
+  ACT
+  EXPLAIN
+}
+
+enum DecisionActionStatus {
+  PENDING
+  EXECUTED
+  SKIPPED
+}
+
+enum VoiceSource {
+  WEB_SPEECH
+  MOBILE_UPLOAD
+}
+
+enum RecommendationStatus {
+  ACTIVE
+  APPLIED
+  EXPIRED
+}
+
+enum ScanType {
+  PEST
+  DISEASE
+}
+
+enum SupplierStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
