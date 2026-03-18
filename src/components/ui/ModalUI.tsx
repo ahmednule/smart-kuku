@@ -67,7 +67,7 @@ const ModalUI = () => {
         onPress={onOpen}
         className="md:px-4 md:py-5 md:text-lg backdrop-blur-sm border bg-emerald-400/20 border-emerald-500/20 text-white rounded-full"
       >
-        Start Diagnosis
+        Start Farm Check
       </Button>
       <Modal
         isDismissable={false}
@@ -88,15 +88,15 @@ const ModalUI = () => {
               <ModalBody>
                 {!choice && (
                   <>
-                    <p>Do you wish to scan for a pest or a disease?</p>
+                    <p>Choose what you want to check first.</p>
                     <Button className="mx-10" onPress={() => setChoice("pest")}>
-                      Pest
+                      Check Pests
                     </Button>
                     <Button
                       className="mx-10"
                       onPress={() => setChoice("disease")}
                     >
-                      Disease
+                      Check Diseases
                     </Button>
                   </>
                 )}

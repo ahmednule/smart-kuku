@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import React from "react";
 import ResourceContent from "@/components/page/resource-page/ResourceContent";
 import { auth } from "@/auth";
-import { Role } from "@prisma/client";
+import { Role } from "@/generated/prisma/enums";
 import { deleteDisease, editDisease } from "@/lib/actions";
 import MobileNav from "@/components/ui/MobileNav";
 import { ResourceType } from "@/lib/types";

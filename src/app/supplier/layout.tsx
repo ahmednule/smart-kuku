@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import SupplierNav from "@/components/page/supplier-page/SupplierNav";
 import Aside from "@/components/ui/Aside";
 import prisma from "@/lib/prisma";
-import { Role, SupplierStatus } from "@prisma/client";
+import { Role, SupplierStatus } from "@/generated/prisma/enums";
 import { notFound, redirect } from "next/navigation";
 import React, { PropsWithChildren } from "react";
 

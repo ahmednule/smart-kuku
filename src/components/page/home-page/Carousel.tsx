@@ -47,7 +47,7 @@ const Carousel = () => {
               variant="ghost"
               className="md:px-4 md:py-5 rounded-full md:text-lg bg-transparent hover:!bg-emerald-400/20 border-emerald-400/50 border-large text-white"
             >
-              Learn More
+              See How It Works
             </Button>
             <ModalUI />
           </div>

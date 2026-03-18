@@ -3,7 +3,7 @@ import DiseaseProgressTracker from "@/components/page/progress-tracker/DiseasePr
 import MobileNav from "@/components/ui/MobileNav";
 import SectionHeader from "@/components/ui/SectionHeader";
 import prisma from "@/lib/prisma";
-import { ScanType } from "@prisma/client";
+import { ScanType } from "@/generated/prisma/enums";
 import { notFound } from "next/navigation";
 import React from "react";
 

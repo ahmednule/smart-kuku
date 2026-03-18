@@ -26,11 +26,11 @@ const MobileNavLinks = () => {
       </Link>
       <Link
         className={cn("text-black", {
-          "text-emerald-500": isLinkActive({ route: "/market", pathname }),
+          "text-emerald-500": isLinkActive({ route: "/store", pathname }),
         })}
-        href="/market"
+        href="/store"
       >
-        Market
+        Store
       </Link>
       <Link
         className={cn("text-black", {

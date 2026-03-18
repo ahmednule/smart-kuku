@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import ResourceContent from "@/components/page/resource-page/ResourceContent";
 import { auth } from "@/auth";
-import { Role } from "@prisma/client";
+import { Role } from "@/generated/prisma/enums";
 import { deletePest, editPest } from "@/lib/actions";
 import MobileNav from "@/components/ui/MobileNav";
 import { ResourceType } from "@/lib/types";
