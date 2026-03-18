@@ -12,8 +12,6 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignOut } from "@fortawesome/free-solid-svg-icons";
 import { signOut, useSession } from "next-auth/react";
-import { auth } from "@/auth";
-import { Role } from "@prisma/client";
 import { isLinkActive } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 
@@ -29,13 +27,16 @@ const AvatarDropdown = ({
   const { data, status, update } = useSession();
   const user = data?.user;
   const userRole = user?.role;
+  const isCustomer = userRole === "CUSTOMER";
+  const isConsultant = userRole === "CONSULTANT";
+  const isAdmin = userRole === "ADMIN";
   const pathname = usePathname();
   const route =
-    userRole === Role.CUSTOMER
+    isCustomer
       ? "/customer"
-      : userRole === Role.CONSULTANT
+      : isConsultant
       ? "/consultant"
-      : userRole === Role.SUPPLIER
+      : userRole === "SUPPLIER"
       ? "/cupplier"
       : "/admin";
   return (
@@ -80,21 +81,21 @@ const AvatarDropdown = ({
             })}
             href={`
             ${
-              userRole === Role.CUSTOMER
+              isCustomer
                 ? "/customer/scan-history"
-                : userRole === Role.CONSULTANT
+                : isConsultant
                 ? "/consultant/dashboard"
-                : userRole === Role.ADMIN
+                : isAdmin
                 ? "/admin/dashboard"
                 : "/supplier/dashboard"
             }
             `}
           >
-            {userRole === Role.CUSTOMER
+            {isCustomer
               ? "Customer Panel"
-              : userRole === Role.CONSULTANT
+              : isConsultant
               ? "Consultant Panel"
-              : userRole === Role.ADMIN
+              : isAdmin
               ? "Admin Panel"
               : "Supplier Panel"}
           </DropdownItem>

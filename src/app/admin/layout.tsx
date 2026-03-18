@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import AdminNav from "@/components/page/admin-page/AdminNav";
 import Aside from "@/components/ui/Aside";
-import { Role } from "@prisma/client";
+import { Role } from "@/generated/prisma/enums";
 import { notFound } from "next/navigation";
 import React, { PropsWithChildren } from "react";
 

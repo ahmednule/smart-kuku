@@ -10,7 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button, Card, CardBody, CardHeader, User } from "@nextui-org/react";
-import { Role } from "@prisma/client";
+import { Role } from "@/generated/prisma/enums";
 import Link from "next/link";
 import React from "react";
 

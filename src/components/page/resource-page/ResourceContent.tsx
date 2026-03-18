@@ -7,7 +7,7 @@ import {
   convertMarkdownToHtml,
 } from "@/lib/utils";
 import { Button, Image } from "@nextui-org/react";
-import { Disease, Pest } from "@prisma/client";
+import type { Disease, Pest } from "@prisma/client";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import ReactQuill from "react-quill";

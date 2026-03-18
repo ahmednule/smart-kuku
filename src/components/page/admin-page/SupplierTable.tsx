@@ -32,7 +32,13 @@ import {
   faThumbsUp,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
-import { Supplier, SupplierStatus } from "@prisma/client";
+import type { Supplier } from "@prisma/client";
+
+const SUPPLIER_STATUS = {
+  PENDING: "PENDING",
+  APPROVED: "APPROVED",
+  REJECTED: "REJECTED",
+} as const;
 
 type SupplierTableColumn =
   | keyof Omit<
@@ -185,12 +191,12 @@ const SupplierTable = ({
             | undefined;
           let statusText;
 
-          if (supplier.status === SupplierStatus.APPROVED) {
+          if (supplier.status === SUPPLIER_STATUS.APPROVED) {
             statusText = `Approved by ${
               supplier.approvedBy
             } on ${supplier.approvedAt?.toLocaleString()}`;
             color = "success";
-          } else if (supplier.status === SupplierStatus.REJECTED) {
+          } else if (supplier.status === SUPPLIER_STATUS.REJECTED) {
             statusText = `Rejected by ${
               supplier.rejectedBy
             } on ${supplier.rejectedAt?.toLocaleString()}`;
@@ -232,7 +238,7 @@ const SupplierTable = ({
                   <FontAwesomeIcon icon={faTrash} />
                 </Button>
               </Tooltip>
-              {supplier.status === SupplierStatus.PENDING ? (
+              {supplier.status === SUPPLIER_STATUS.PENDING ? (
                 <>
                   <Tooltip
                     content="Approve supplier"
@@ -271,7 +277,7 @@ const SupplierTable = ({
                     </Button>
                   </Tooltip>
                 </>
-              ) : supplier.status === SupplierStatus.APPROVED ? (
+              ) : supplier.status === SUPPLIER_STATUS.APPROVED ? (
                 <>
                   <Tooltip
                     content="Reject supplier"
@@ -305,7 +311,7 @@ const SupplierTable = ({
                     </Button>
                   </Tooltip>
                 </>
-              ) : supplier.status === SupplierStatus.REJECTED ? (
+              ) : supplier.status === SUPPLIER_STATUS.REJECTED ? (
                 <>
                   <Tooltip
                     content="Approve supplier"

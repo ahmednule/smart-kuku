@@ -15,10 +15,15 @@ import toast from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
-import { ScanType } from "@prisma/client";
+import type { ScanType } from "@prisma/client";
 import ReactMarkdown from "react-markdown";
 import { ExpandedDescriptions, ResourceNames, TScanData } from "@/lib/types";
 import { convertMarkdownToHtml, getResourceName } from "@/lib/utils";
+
+const SCAN_TYPE = {
+  PEST: "PEST",
+  DISEASE: "DISEASE",
+} as const;
 
 type ScanColumnKey = "id" | "description" | "createdAt" | "image" | "actions";
 
@@ -163,8 +168,8 @@ const CustomerScansTable = ({
           variant="bordered"
           className="max-w-40 mb-4"
         >
-          <SelectItem key={ScanType.PEST}>Pest</SelectItem>
-          <SelectItem key={ScanType.DISEASE}>Disease</SelectItem>
+          <SelectItem key={SCAN_TYPE.PEST}>Pest</SelectItem>
+          <SelectItem key={SCAN_TYPE.DISEASE}>Disease</SelectItem>
         </Select>
         <Select
           selectedKeys={filterName}

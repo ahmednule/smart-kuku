@@ -3,7 +3,7 @@ import SupplierForm from "@/components/page/admin-page/SupplierForm";
 import SectionHeader from "@/components/ui/SectionHeader";
 import prisma from "@/lib/prisma";
 import { Card } from "@nextui-org/react";
-import { Role, SupplierStatus } from "@prisma/client";
+import { Role, SupplierStatus } from "@/generated/prisma/enums";
 import { notFound, redirect } from "next/navigation";
 
 const SupplierLogin = async () => {

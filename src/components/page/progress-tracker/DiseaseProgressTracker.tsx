@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import DiseaseCard from "./DiseaseCard";
-import { Scan } from "@prisma/client";
+import type { Scan } from "@prisma/client";
 import { Button, Select, SelectItem } from "@nextui-org/react";
 import toast from "react-hot-toast";
 import { trackProgress } from "@/lib/actions";

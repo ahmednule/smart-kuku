@@ -1,7 +1,7 @@
 "use client";
 
 import { cn, Input } from "@nextui-org/react";
-import { User } from "@prisma/client";
+import type { User } from "@prisma/client";
 import React, { useEffect } from "react";
 
 import { FilePond, registerPlugin } from "react-filepond";

@@ -31,11 +31,11 @@ import {
 } from "./types";
 import { Resend } from "resend";
 import { EmailTemplate } from "@/components/ui/EmailTemplate";
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import prisma from "./prisma";
-import { Role, ScanType, SupplierStatus } from "@prisma/client";
+import { Role, ScanType, SupplierStatus } from "@/generated/prisma/enums";
 import { getServerSupabase, getSupabasePublicUrl } from "./supabase";
 import removeMarkdown from "remove-markdown";
 import {
@@ -47,6 +47,30 @@ import { redirect } from "next/navigation";
 import type { ReactElement } from "react";
 
 const supabase = getServerSupabase();
+const GEMINI_MODEL = "gemini-2.0-flash";
+
+const getGoogleApiKey = () => {
+  const apiKey = process.env.GOOGLE_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Missing required environment variable: GOOGLE_API_KEY");
+  }
+
+  return apiKey;
+};
+
+const gemini = new GoogleGenAI({ apiKey: getGoogleApiKey() });
+
+const getModelText = (response: any): string => {
+  const text =
+    typeof response?.text === "function" ? response.text() : response?.text;
+
+  if (typeof text !== "string") {
+    throw new Error("Gemini returned an empty response");
+  }
+
+  return text;
+};
 
 export const scanPestImage = async (
   formState: string,
@@ -56,9 +80,6 @@ export const scanPestImage = async (
   if (image.size === 0) {
     return ScanStatus.ERROR;
   }
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API,
-  });
   const session = await auth();
   const user = session?.user;
   const parsedImage = JSON.parse(image);
@@ -67,28 +88,26 @@ export const scanPestImage = async (
 
   // Fetching AI scan response
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
+    const response = await gemini.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: [
         {
           role: "user",
-          content: [
+          parts: [
             {
-              type: "text",
               text: "The image is a scan of a plant pest. Generate a response that includes: 1. The name of the pest in singular form and bold as the first word, 2. Description, 3. Damage, 4. Control and 5. Treatment. Ensure each section is very detailed in its own paragraph with the section headings bolded and no spacing between a specific paragraph. Separate content with a br tag. If the image given is not a pest, the response should be the text 'Error: This is not a pest' in plain text",
             },
             {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${parsedImage.data}`,
-                detail: "high",
+              inlineData: {
+                mimeType: parsedImage.type || "image/jpeg",
+                data: parsedImage.data,
               },
             },
           ],
         },
       ],
     });
-    const res = response.choices[0].message.content as string;
+    const res = getModelText(response);
 
     // Handle image not pest
     if (res.includes("Error: This is not a pest"))
@@ -155,9 +174,6 @@ export const scanDiseaseImage = async (
   if (image.size === 0) {
     return ScanStatus.ERROR;
   }
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API,
-  });
   const session = await auth();
   const user = session?.user;
   const parsedImage = JSON.parse(image);
@@ -170,28 +186,26 @@ export const scanDiseaseImage = async (
 
   // Fetching AI scan response
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
+    const response = await gemini.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: [
         {
           role: "user",
-          content: [
+          parts: [
             {
-              type: "text",
               text: "The image given should be of a plant disease. Generate a response that comprises of: 1. The name of the disease in singular form first word, 2. Cause, 3. Symptoms, 4. Impact and 5. Treatment each in their own paragraphs with heading bold and separated with a br tagnpm. If the image given is not a disease, the response should be the text 'Error: This is not a disease'",
             },
             {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${parsedImage.data}`,
-                detail: "high",
+              inlineData: {
+                mimeType: parsedImage.type || "image/jpeg",
+                data: parsedImage.data,
               },
             },
           ],
         },
       ],
     });
-    const res = response.choices[0].message.content as string;
+    const res = getModelText(response);
 
     // Handle image not disease
     if (res.includes("Error: This is not a disease"))
@@ -603,7 +617,7 @@ export const deleteAllScans = async () => {
   revalidatePath("/customer/scan-history");
 };
 
-// a function which receives 2 image ids, fetches the url of the image by use of the id from the scan prisma model and converts the 2 supabase bucket url to a form that open ai image api can understand the image and pass the 2 images to the api with a text of stating how the progress is and returning the response
+// Receives 2 scan ids, fetches their images, sends them to Gemini, and returns a progress summary.
 export const trackProgress = async ({
   image1,
   image2,
@@ -628,33 +642,52 @@ export const trackProgress = async ({
     },
   });
 
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API,
-  });
-
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
+    if (!image1Url?.url || !image2Url?.url) {
+      return ScanStatus.ERROR;
+    }
+
+    const [firstImageResponse, secondImageResponse] = await Promise.all([
+      fetch(image1Url.url),
+      fetch(image2Url.url),
+    ]);
+
+    if (!firstImageResponse.ok || !secondImageResponse.ok) {
+      return ScanStatus.ERROR;
+    }
+
+    const [firstImageBuffer, secondImageBuffer] = await Promise.all([
+      firstImageResponse.arrayBuffer(),
+      secondImageResponse.arrayBuffer(),
+    ]);
+
+    const firstImageBase64 = Buffer.from(firstImageBuffer).toString("base64");
+    const secondImageBase64 = Buffer.from(secondImageBuffer).toString("base64");
+
+    const firstImageMimeType =
+      firstImageResponse.headers.get("content-type") || "image/jpeg";
+    const secondImageMimeType =
+      secondImageResponse.headers.get("content-type") || "image/jpeg";
+
+    const response = await gemini.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: [
         {
           role: "user",
-          content: [
+          parts: [
             {
-              type: "text",
               text: "You are an agricultural AI assistant. You have been given the 2 images, track the progress of the plant disease over time. The first image is the initial scan of the plant disease and the second image is the latest scan of the plant disease. Provide a detailed response on how the plant disease has progressed over time. If the progress has not improved or has become worse, then notify the user about it as well. If the images are of different diseases or are just different plants altogether, notify the user with a response of one sentence. Do not give a response like feel free to ask because it's a one way input",
             },
             {
-              type: "image_url",
-              image_url: {
-                url: image1Url!.url,
-                detail: "high",
+              inlineData: {
+                mimeType: firstImageMimeType,
+                data: firstImageBase64,
               },
             },
             {
-              type: "image_url",
-              image_url: {
-                url: image2Url!.url,
-                detail: "high",
+              inlineData: {
+                mimeType: secondImageMimeType,
+                data: secondImageBase64,
               },
             },
           ],
@@ -662,8 +695,7 @@ export const trackProgress = async ({
       ],
     });
 
-    console.log(response.choices[0].message);
-    return response.choices[0].message.content as string;
+    return getModelText(response);
   } catch (error) {
     return ScanStatus.ERROR;
   }
@@ -1455,31 +1487,23 @@ export const sendMessage = async (message: string) => {
     return "Ask me anything about your poultry farm, for example flock health, feeding, vaccination, water management, housing, egg production, or broiler growth.";
   }
 
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API,
-  });
-
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are KukuSmart AI, an autonomous poultry advisor for small and medium poultry farms. Answer with practical, step-by-step guidance for poultry only: broilers, layers, chicks, feed, water, housing, vaccination, biosecurity, mortality reduction, egg production, and sales timing. If a question is outside poultry, briefly say you can only help with poultry farm operations.",
-        },
+    const response = await gemini.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: [
         {
           role: "user",
-          content: [
+          parts: [
             {
-              type: "text",
-              text: normalizedMessage,
+              text:
+                "You are KukuSmart AI, an autonomous poultry advisor for small and medium poultry farms. Answer with practical, step-by-step guidance for poultry only: broilers, layers, chicks, feed, water, housing, vaccination, biosecurity, mortality reduction, egg production, and sales timing. If a question is outside poultry, briefly say you can only help with poultry farm operations.\n\nFarmer question: " +
+                normalizedMessage,
             },
           ],
         },
       ],
     });
-    return response.choices[0].message.content as string;
+    return getModelText(response);
   } catch (error) {
     throw new Error(
       "Failed to send message: " +

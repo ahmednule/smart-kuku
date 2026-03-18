@@ -9,7 +9,7 @@ import {
   TableRow,
   TableCell,
 } from "@nextui-org/table";
-import { User } from "@prisma/client";
+import type { User } from "@prisma/client";
 import { Button, User as NextUser, Tooltip } from "@nextui-org/react";
 import { deleteUser } from "@/lib/actions";
 import toast from "react-hot-toast";

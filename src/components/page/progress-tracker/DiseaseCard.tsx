@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardBody, CardFooter, CardHeader, cn } from "@nextui-org/react";
 import Image from "next/image";
-import { Scan } from "@prisma/client";
+import type { Scan } from "@prisma/client";
 import toast from "react-hot-toast";
 
 const DiseaseCard = ({

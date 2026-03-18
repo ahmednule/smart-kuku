@@ -16,7 +16,7 @@ import { addProduct, editProduct } from "@/lib/actions";
 import { initialAddProductFormState, initialEditProductFormState } from "@/lib/constants";
 import toast from "react-hot-toast";
 import SectionHeader from "@/components/ui/SectionHeader";
-import { Product, ProductSupplier } from "@prisma/client";
+import type { Product, ProductSupplier } from "@prisma/client";
 import { FilePond } from "react-filepond";
 import { TLocation } from "@/lib/types";
 

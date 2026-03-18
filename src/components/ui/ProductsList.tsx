@@ -23,7 +23,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import toast from "react-hot-toast";
-import { Product, ProductSupplier, Role } from "@prisma/client";
+import type { Product, ProductSupplier } from "@prisma/client";
 import { deleteProduct } from "@/lib/actions";
 import { initialPriceRange } from "@/lib/constants";
 import { TLocation } from "@/lib/types";
@@ -282,7 +282,7 @@ const ProductsList = ({
                 <FontAwesomeIcon icon={faTrash} />
               </Button>
             </Tooltip>
-            {user?.role === Role.SUPPLIER && (
+            {user?.role === "SUPPLIER" && (
               <Tooltip
                 content="Edit product"
                 color="warning"

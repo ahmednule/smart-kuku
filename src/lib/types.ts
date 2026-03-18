@@ -9,7 +9,14 @@ import {
   editProductFormSchema,
 } from "./schemas";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { Product, Role, Scan, ScanType, Supplier, User } from "@prisma/client";
+import type {
+  Product,
+  Role,
+  Scan,
+  ScanType,
+  Supplier,
+  User,
+} from "@prisma/client";
 
 export type ContactForm = z.infer<typeof contactFormSchema>;
 

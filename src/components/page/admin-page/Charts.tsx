@@ -12,7 +12,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { User } from "@prisma/client";
+import type { User } from "@prisma/client";
 import { ChartOptions } from "chart.js";
 
 ChartJS.register(

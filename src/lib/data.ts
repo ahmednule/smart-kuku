@@ -50,7 +50,7 @@ export const FEATURES_DATA: TFeatureItem[] = [
 export const PARTNERSHIPS_DATA = [
   { src: "/assets/images/nasa.svg", alt: "NASA logo", name: "NASA" },
   { src: "/assets/images/meta.svg", alt: "Meta logo", name: "Meta" },
-  { src: "/assets/images/openai.svg", alt: "OpenAI logo", name: "OpenAI" },
+  { src: "/assets/images/google.svg", alt: "Gemini logo", name: "Gemini" },
   {
     src: "/assets/images/microsoft.svg",
     alt: "Microsoft logo",

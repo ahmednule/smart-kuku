@@ -3,7 +3,6 @@ import UserTable from "@/components/page/admin-page/UserTable";
 import MobileNav from "@/components/ui/MobileNav";
 import prisma from "@/lib/prisma";
 import { CustomerScan } from "@/lib/types";
-import { Customer, Role, Scan, User } from "@prisma/client";
 import React from "react";
 
 const CustomersPage = async () => {
