@@ -1,12 +1,9 @@
-import MobileNav from "@/components/ui/MobileNav";
 import SectionHeader from "@/components/ui/SectionHeader";
 import Link from "next/link";
-import React from "react";
 
-const ResourcesPage = () => {
+const FarmerResourcesPage = () => {
   return (
     <>
-      <MobileNav />
       <SectionHeader className="text-left m-0">Poultry Health Guide</SectionHeader>
       <p className="text-emerald-800 mt-5">
         KukuSmart provides a practical guide for common poultry health risks.
@@ -31,4 +28,4 @@ const ResourcesPage = () => {
   );
 };
 
-export default ResourcesPage;
+export default FarmerResourcesPage;

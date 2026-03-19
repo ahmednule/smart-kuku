@@ -117,7 +117,7 @@ const FarmerDashboardClient = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Button
               as={Link}
-              href="/map"
+              href="/farmer/map"
               className="bg-emerald-500 text-white hover:bg-emerald-600 py-6"
               fullWidth
             >
@@ -125,7 +125,7 @@ const FarmerDashboardClient = ({
             </Button>
             <Button
               as={Link}
-              href="/customer/scan-history"
+              href="/farmer/scan-history"
               className="bg-blue-500 text-white hover:bg-blue-600 py-6"
               fullWidth
             >
@@ -133,7 +133,7 @@ const FarmerDashboardClient = ({
             </Button>
             <Button
               as={Link}
-              href="/resources"
+              href="/farmer/resources"
               className="bg-yellow-500 text-white hover:bg-yellow-600 py-6"
               fullWidth
             >
@@ -165,7 +165,7 @@ const FarmerDashboardClient = ({
                       </div>
                       <Button
                         as={Link}
-                        href={`/map?farm=${farm.id}`}
+                        href={`/farmer/map?farm=${farm.id}`}
                         size="sm"
                         className="bg-emerald-500 text-white"
                       >
@@ -185,7 +185,7 @@ const FarmerDashboardClient = ({
               </p>
               <Button
                 as={Link}
-                href="/map"
+                href="/farmer/map"
                 className="bg-emerald-500 text-white"
               >
                 Create Farm

@@ -117,7 +117,7 @@ export const ADMIN_ROUTES = [
 
 export const CUSTOMER_ROUTES = [
   {
-    path: "/customer/scan-history",
+    path: "/farmer/scan-history",
     value: "Scan History",
     icon: faClockRotateLeft,
   },
@@ -132,7 +132,7 @@ export const CUSTOMER_ROUTES = [
     icon: faMessage,
   },
   {
-    path: "/consultants",
+    path: "/customer/consultants",
     value: "Consultants",
     icon: faUserDoctor,
   },
@@ -173,17 +173,17 @@ export const FARMER_ROUTES = [
     icon: faHouse,
   },
   {
-    path: "/map",
+    path: "/farmer/map",
     value: "Farm Map",
     icon: faMapLocationDot,
   },
   {
-    path: "/customer/scan-history",
+    path: "/farmer/scan-history",
     value: "Scan History",
     icon: faClockRotateLeft,
   },
   {
-    path: "/resources",
+    path: "/farmer/resources",
     value: "Resources",
     icon: faFlask,
   },

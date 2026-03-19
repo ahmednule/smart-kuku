@@ -7,12 +7,14 @@ import { Button, cn, Divider } from "@nextui-org/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import FarmSetupPrompt from "./FarmSetupPrompt";
 
-const FarmerNav = () => {
+const FarmerNav = ({ needsFarmSetup }: { needsFarmSetup: boolean }) => {
   const pathname = usePathname();
 
   return (
     <nav>
+      <FarmSetupPrompt needsFarmSetup={needsFarmSetup} />
       <ul className="space-y-4">
         {FARMER_ROUTES.map((route, index) => (
           <React.Fragment key={route.path}>

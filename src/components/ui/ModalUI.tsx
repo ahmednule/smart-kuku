@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Button,
   Link,
@@ -9,9 +11,8 @@ import {
   cn,
   useDisclosure,
 } from "@nextui-org/react";
-import React, { useState } from "react";
+import React, { useActionState, useState } from "react";
 import ImageUpload from "./ImageUpload";
-import { useFormState } from "react-dom";
 import { scanPestImage, scanDiseaseImage } from "@/lib/actions";
 import { ScanStatus } from "@/lib/constants";
 import ChipUI from "./ChipUI";
@@ -20,8 +21,8 @@ import ScanButton from "./ScanButton";
 
 const ModalUI = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [pestFormState, pestFormAction] = useFormState(scanPestImage, "");
-  const [diseaseFormState, diseaseFormAction] = useFormState(
+  const [pestFormState, pestFormAction] = useActionState(scanPestImage, "");
+  const [diseaseFormState, diseaseFormAction] = useActionState(
     scanDiseaseImage,
     ""
   );

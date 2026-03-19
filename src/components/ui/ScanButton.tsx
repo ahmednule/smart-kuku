@@ -1,3 +1,5 @@
+"use client";
+
 import { faQrcode } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button, cn } from "@nextui-org/react";
