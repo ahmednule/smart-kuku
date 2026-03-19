@@ -44,7 +44,10 @@ const ModalUI = () => {
       ? false
       : true;
 
-    const [choice, setChoice] = useState<"pest" | "disease">("pest");
+  const [choice, setChoice] = useState<"pest" | "disease">("pest");
+  const [speechLanguage, setSpeechLanguage] = useState<"sw-KE" | "en-US">(
+    "sw-KE"
+  );
 
   return (
     <>
@@ -95,6 +98,34 @@ const ModalUI = () => {
                   </Button>
                 </div>
 
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-semibold text-emerald-700">
+                    Voice language:
+                  </span>
+                  <Button
+                    size="sm"
+                    className={cn("min-w-24", {
+                      "bg-emerald-600 text-white": speechLanguage === "sw-KE",
+                      "bg-emerald-100 text-emerald-700":
+                        speechLanguage !== "sw-KE",
+                    })}
+                    onPress={() => setSpeechLanguage("sw-KE")}
+                  >
+                    Kiswahili
+                  </Button>
+                  <Button
+                    size="sm"
+                    className={cn("min-w-20", {
+                      "bg-emerald-600 text-white": speechLanguage === "en-US",
+                      "bg-emerald-100 text-emerald-700":
+                        speechLanguage !== "en-US",
+                    })}
+                    onPress={() => setSpeechLanguage("en-US")}
+                  >
+                    English
+                  </Button>
+                </div>
+
                 {choice === "pest" && (
                   <>
                     <p className="text-emerald-700">
@@ -110,6 +141,7 @@ const ModalUI = () => {
                       <ScanResponse
                         isScanSuccess={isPestScanSuccess}
                         response={pestFormState}
+                        speechLanguage={speechLanguage}
                       />
                       {pestFormState && (
                         <p className="text-emerald-800 mt-4">
@@ -137,6 +169,7 @@ const ModalUI = () => {
                       <ScanResponse
                         isScanSuccess={isDiseaseScanSuccess}
                         response={diseaseFormState}
+                        speechLanguage={speechLanguage}
                       />
                       {diseaseFormState && (
                         <p className="text-emerald-800 mt-4">
