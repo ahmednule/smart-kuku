@@ -129,7 +129,7 @@ const ProfilePage = () => {
             </h3>
             <p className="text-emerald-700 text-sm leading-relaxed">
               You are logged in as a <strong>{user?.role?.toLowerCase()}</strong>. 
-              Your account gives you access to KukuSmart's features tailored to your role.
+              Your account gives you access to SMARTKUKU features tailored to your role.
               {user?.role === "FARMER" && (
                 <> You can access the farmer dashboard, manage your farms, get AI recommendations, 
                 and track your poultry operations.</>

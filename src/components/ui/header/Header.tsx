@@ -38,7 +38,7 @@ const Header = () => {
       />
       <NavbarBrand>
         <span className="text-white text-xl">
-          Kuku<span className="font-bold text-xl text-emerald-500">SMART</span>
+          SMART<span className="font-bold text-xl text-emerald-500">KUKU</span>
         </span>
       </NavbarBrand>
       <NavbarContent className="hidden sm:flex gap-4" justify="center">

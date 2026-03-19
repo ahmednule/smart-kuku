@@ -45,8 +45,8 @@ const Carousel = () => {
               Smart Poultry Intelligence
             </p>
             <h1 className="text-3xl md:text-5xl max-w-4xl mx-auto text-center font-extrabold text-white leading-tight mt-3">
-              Run your poultry farm with Kuku
-              <span className="text-emerald-300">Smart</span> using fast,
+              Run your poultry farm with SMART
+              <span className="text-emerald-300">KUKU</span> using fast,
               practical AI guidance.
             </h1>
             <p className="mt-4 text-center text-emerald-100/90 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">

@@ -201,7 +201,7 @@ const FarmerDashboardClient = ({
               Need help?
             </h3>
             <p className="text-emerald-800 mb-4">
-              Use the "Start Talking" button on the homepage to chat with KukuSmart AI in real-time.
+              Use the "Start Talking" button on the homepage to chat with SMARTKUKU AI in real-time.
               Get instant advice on pests, diseases, farm management, and more!
             </p>
             <Button

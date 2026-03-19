@@ -18,9 +18,9 @@ config.autoAddCss = false;
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "KukuSmart",
+  title: "SmartKuku",
   description:
-    "KukuSmart is an autonomous poultry farm decision agent that continuously monitors flock health, feed, water, egg output, and environment to trigger timely, explainable actions for smallholder farmers.",
+    "SmartKuku is an autonomous poultry farm decision agent that continuously monitors flock health, feed, water, egg output, and environment to trigger timely, explainable actions for smallholder farmers.",
 };
 
 export default function RootLayout({
