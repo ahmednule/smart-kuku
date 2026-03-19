@@ -5,6 +5,7 @@ import { isLinkActive } from "@/lib/utils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button, cn, Divider } from "@nextui-org/react";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import React from "react";
 import FarmSetupPrompt from "./FarmSetupPrompt";
@@ -13,8 +14,10 @@ const FarmerNav = ({ needsFarmSetup }: { needsFarmSetup: boolean }) => {
   const pathname = usePathname();
 
   return (
-    <nav>
-      <FarmSetupPrompt needsFarmSetup={needsFarmSetup} />
+    <nav className="flex h-full flex-col">
+      <div>
+        <FarmSetupPrompt needsFarmSetup={needsFarmSetup} />
+      </div>
       <ul className="space-y-4">
         {FARMER_ROUTES.map((route, index) => (
           <React.Fragment key={route.path}>
@@ -41,6 +44,22 @@ const FarmerNav = ({ needsFarmSetup }: { needsFarmSetup: boolean }) => {
           </React.Fragment>
         ))}
       </ul>
+
+      <div className="mt-auto pt-6">
+        <Divider className="mb-4 bg-emerald-600" />
+        <Button
+          className="w-full"
+          color="danger"
+          variant="flat"
+          onPress={() =>
+            signOut({
+              callbackUrl: "/",
+            })
+          }
+        >
+          Logout
+        </Button>
+      </div>
     </nav>
   );
 };

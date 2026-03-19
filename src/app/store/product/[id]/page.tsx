@@ -1,52 +1,29 @@
 import React from "react";
-import prisma from "@/lib/prisma";
 import ProductImageAside from "@/components/page/product-page/ProductImageAside";
 import ProductDetailsCard from "@/components/page/product-page/ProductDetailsCard";
-import { IpInfo } from "@/lib/types";
-import { Image } from "@nextui-org/react";
 import AgrochemicalsList from "@/components/page/store-page/AgrochemicalsList";
+import { notFound } from "next/navigation";
+import { LOCAL_STORE_PRODUCTS } from "@/lib/store-data";
 
-const ProductPage = async ({ params: { id } }: { params: { id: string } }) => {
-  const productData = await prisma.productSupplier.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      price: true,
-      city: true,
-      description: true,
-      currencySymbol: true,
-      country: true,
-      images: true,
-      product: {
-        select: { name: true, id: true },
-      },
-      supplier: {
-        select: { name: true, id: true },
-      },
-    },
-  });
+const ProductPage = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
+  const { id } = await params;
+  const productData = LOCAL_STORE_PRODUCTS.find((product) => product.id === id);
 
-  const productsWithSupplier = await prisma.productSupplier.findMany({
-    where: {
-      supplierId: productData?.supplier.id,
-      NOT: { id: productData?.id },
-      country: productData?.country,
-      city: productData?.city,
-    },
-    select: {
-      id: true,
-      price: true,
-      city: true,
-      country: true,
-      images: true,
-      product: {
-        select: { name: true, id: true },
-      },
-      supplier: {
-        select: { name: true },
-      },
-    },
-  });
+  if (!productData) {
+    notFound();
+  }
+
+  const productsWithSupplier = LOCAL_STORE_PRODUCTS.filter(
+    (product) =>
+      product.supplier.id === productData.supplier.id &&
+      product.id !== productData.id &&
+      product.country === productData.country &&
+      product.city === productData.city
+  );
 
   return (
     <>

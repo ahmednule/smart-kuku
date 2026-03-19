@@ -21,7 +21,7 @@ const layout = async ({ children }: PropsWithChildren) => {
       <Aside>
         <FarmerNav needsFarmSetup={needsFarmSetup} />
       </Aside>
-      <main className="p-10 pt-20 lg:p-20 lg:w-5/6 h-full w-full overflow-y-auto text-emerald-900">
+      <main className="p-4 pt-16 md:p-6 md:pt-20 lg:p-8 lg:pt-20 lg:w-5/6 h-full w-full overflow-y-auto text-emerald-900">
         {children}
       </main>
     </div>

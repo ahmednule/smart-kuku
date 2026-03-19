@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, Chip } from "@nextui-org/react";
 import React from "react";
 

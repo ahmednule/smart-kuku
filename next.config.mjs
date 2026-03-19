@@ -9,8 +9,13 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "cbrgfqvmkgowzerbzued.supabase.co",
+        hostname: "wtoorllowkblufayzowc.supabase.co",
         pathname: "/storage/v1/object/public/images/**",
+      },
+      {
+        protocol: "https",
+        hostname: "wtoorllowkblufayzowc.supabase.co",
+        pathname: "/storage/v1/object/sign/images/**",
       },
     ],
   },

@@ -1,6 +1,7 @@
 "use client";
 // app/components/ChatButton.tsx
 import { useState, useCallback, FormEvent, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button, cn, Image, Input } from "@nextui-org/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -22,6 +23,9 @@ declare global {
 }
 
 export default function ChatButton() {
+  const router = useRouter();
+  const welcomeMessage =
+    "Welcome to smartkuku. I am your poultry assistant. Ask me anything or say things like 'go to dashboard', 'open farm map', or 'go to daily collection'.";
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>(
     []
@@ -34,14 +38,25 @@ export default function ChatButton() {
   const [language, setLanguage] = useState<SupportedLanguage>("sw-KE");
   const recognitionRef = useRef<any>(null);
 
+  const stopSpeaking = useCallback(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      return;
+    }
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  }, []);
+
   useEffect(() => {
     return () => {
-      recognitionRef.current?.stop?.();
-      if (typeof window !== "undefined" && "speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
+      try {
+        recognitionRef.current?.abort?.();
+        recognitionRef.current?.stop?.();
+      } catch {
+        // Ignore teardown errors from browser speech APIs.
       }
+      stopSpeaking();
     };
-  }, []);
+  }, [stopSpeaking]);
 
   const speakResponse = useCallback(
     (text: string) => {
@@ -52,7 +67,7 @@ export default function ChatButton() {
       const plainText = text.replace(/[#*_`>\-]/g, " ").trim();
       if (!plainText) return;
 
-      window.speechSynthesis.cancel();
+      stopSpeaking();
       const utterance = new SpeechSynthesisUtterance(plainText);
       utterance.lang = language;
       utterance.onstart = () => setIsSpeaking(true);
@@ -65,7 +80,14 @@ export default function ChatButton() {
   );
 
   const stopListening = useCallback(() => {
-    recognitionRef.current?.stop?.();
+    try {
+      // abort is immediate and tends to be more reliable for user-triggered stop.
+      recognitionRef.current?.abort?.();
+      recognitionRef.current?.stop?.();
+    } catch {
+      // Ignore runtime differences across browsers.
+    }
+    recognitionRef.current = null;
     setIsListening(false);
   }, []);
 
@@ -86,6 +108,8 @@ export default function ChatButton() {
     recognition.maxAlternatives = 1;
     recognition.continuous = false;
 
+    recognition.onstart = () => setIsListening(true);
+
     recognition.onresult = (event: any) => {
       const transcript = event?.results?.[0]?.[0]?.transcript || "";
       setInput((prev) => (prev ? `${prev} ${transcript}`.trim() : transcript));
@@ -93,14 +117,17 @@ export default function ChatButton() {
 
     recognition.onerror = () => {
       setError("Voice capture failed. Try again.");
+      recognitionRef.current = null;
       setIsListening(false);
     };
 
-    recognition.onend = () => setIsListening(false);
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setIsListening(false);
+    };
 
     recognitionRef.current = recognition;
     setError("");
-    setIsListening(true);
     recognition.start();
   }, [language]);
 
@@ -132,14 +159,89 @@ export default function ChatButton() {
     };
   }, [isListening, startListening]);
 
+  useEffect(() => {
+    if (!isOpen || messages.length > 0) return;
+
+    setMessages([{ text: welcomeMessage, isUser: false }]);
+  }, [isOpen, messages.length, welcomeMessage]);
+
   const handleSendMessage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
     setError("");
 
+    const normalizedInput = input.trim().toLowerCase();
+
     const userMessage = { text: input, isUser: true };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+
+    const navigationRules = [
+      {
+        match: (value: string) =>
+          /\b(farmer )?dashboard\b|\bhome dashboard\b/.test(value),
+        path: "/farmer/dashboard",
+        label: "Farmer Dashboard",
+      },
+      {
+        match: (value: string) => /\bmap\b|\bfarm map\b/.test(value),
+        path: "/farmer/map",
+        label: "Farm Map",
+      },
+      {
+        match: (value: string) =>
+          /\bscan history\b|\bscans\b|\bscan page\b/.test(value),
+        path: "/farmer/scan-history",
+        label: "Scan History",
+      },
+      {
+        match: (value: string) =>
+          /\bdaily collection\b|\bdaily collections\b|\beggs log\b|\bcollection log\b|\bcollections\b/.test(
+            value
+          ),
+        path: "/farmer/daily-collections",
+        label: "Daily Collections",
+      },
+      {
+        match: (value: string) => /\bresources\b|\bpests\b|\bdiseases\b/.test(value),
+        path: "/farmer/resources",
+        label: "Resources",
+      },
+      {
+        match: (value: string) => /\bprofile\b|\bmy account\b/.test(value),
+        path: "/profile",
+        label: "Profile",
+      },
+      {
+        match: (value: string) => /\bstore\b|\bshop\b|\bbuy\b/.test(value),
+        path: "/store",
+        label: "Store",
+      },
+    ];
+
+    const wantsNavigation =
+      /\b(go to|open|take me to|navigate to|show me|move to)\b/.test(
+        normalizedInput
+      ) ||
+      normalizedInput === "dashboard" ||
+      normalizedInput === "map" ||
+      normalizedInput === "resources";
+
+    const navTarget = wantsNavigation
+      ? navigationRules.find((rule) => rule.match(normalizedInput))
+      : undefined;
+
+    if (navTarget) {
+      const botMessage = {
+        text: `Opening ${navTarget.label} now.`,
+        isUser: false,
+      };
+      setMessages((prev) => [...prev, botMessage]);
+      speakResponse(botMessage.text);
+      router.push(navTarget.path);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const apiResponse = await fetch("/api/ai/chat", {
@@ -177,7 +279,7 @@ export default function ChatButton() {
             "rotate-45": isOpen,
           }
         )}
-        title="Chat with KukuSmart AI"
+        title="Chat with smartkuku"
         onPress={() => setIsOpen(!isOpen)}
         isIconOnly
         size="lg"
@@ -186,6 +288,9 @@ export default function ChatButton() {
       </Button>
       {isOpen && (
         <div className="fixed bottom-20 right-5 z-50 w-80 bg-white p-4 shadow-lg rounded-lg border border-gray-300">
+          <div className="mb-2">
+            <p className="text-sm font-bold text-emerald-900">smartkuku assistant</p>
+          </div>
           <div className="mb-3 flex items-center justify-between">
             <label
               htmlFor="chat-language"
@@ -226,10 +331,15 @@ export default function ChatButton() {
                 />
               ))
             ) : (
-              <div className=" text-gray-500">No messages yet.</div>
+              <div className=" text-gray-500">smartkuku assistant is ready.</div>
             )}
           </div>
           <form onSubmit={handleSendMessage}>
+            {(isListening || isSpeaking) && (
+              <p className="mb-2 text-xs font-medium text-emerald-700">
+                {isListening ? "Listening..." : "Speaking..."}
+              </p>
+            )}
             <Input
               fullWidth
               placeholder="Ask a question..."
@@ -271,6 +381,20 @@ export default function ChatButton() {
                     }}
                   >
                     <FontAwesomeIcon icon={faVolumeHigh} />
+                  </Button>
+
+                  <Button
+                    type="button"
+                    isIconOnly
+                    isDisabled={!isSpeaking}
+                    className={cn("text-white", {
+                      "bg-rose-600": isSpeaking,
+                      "bg-slate-500": !isSpeaking,
+                    })}
+                    title="Stop reading response"
+                    onPress={stopSpeaking}
+                  >
+                    <FontAwesomeIcon icon={faStop} />
                   </Button>
 
                   <Button

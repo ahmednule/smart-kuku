@@ -34,7 +34,13 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import prisma from "./prisma";
 import { Role, ScanType, SupplierStatus } from "@/generated/prisma/enums";
-import { getServerSupabase, getSupabasePublicUrl } from "./supabase";
+import {
+  ensureImagesBucketExists,
+  getServerSupabase,
+  getSupabasePublicUrl,
+  SUPABASE_IMAGES_BUCKET,
+  validateSupabaseServiceRoleKey,
+} from "./supabase";
 import removeMarkdown from "remove-markdown";
 import {
   arraysAreEqualUnordered,
@@ -44,7 +50,10 @@ import {
 import { redirect } from "next/navigation";
 import nodemailer from "nodemailer";
 
-const supabase = getServerSupabase();
+const getSupabaseAdminClient = () => {
+  validateSupabaseServiceRoleKey();
+  return getServerSupabase();
+};
 const GEMINI_MODEL = "gemini-2.5-flash";
 
 const getGoogleApiKey = () => {
@@ -99,6 +108,65 @@ const parseUploadedImage = (formData: FormData) => {
   return parsedImage;
 };
 
+const sanitizeFileName = (name?: string) => {
+  const fallback = `scan_${Date.now()}.jpg`;
+  if (!name || typeof name !== "string") return fallback;
+
+  return name.replace(/[^a-zA-Z0-9._-]/g, "_");
+};
+
+const uploadScanImageAndGetUrl = async ({
+  userId,
+  category,
+  parsedImage,
+}: {
+  userId: string;
+  category: "pests" | "diseases";
+  parsedImage: any;
+}) => {
+  const supabase = getSupabaseAdminClient();
+  await ensureImagesBucketExists();
+
+  const imageBuffer = Buffer.from(parsedImage.data, "base64");
+  const safeName = sanitizeFileName(parsedImage.name);
+  const filePath = `${userId}/${category}/${Date.now()}_${safeName}`;
+
+  let { data: imageData, error } = await supabase.storage
+    .from(SUPABASE_IMAGES_BUCKET)
+    .upload(filePath, imageBuffer, {
+      contentType: parsedImage.type || "image/jpeg",
+      upsert: false,
+    });
+
+  if (error?.message?.toLowerCase().includes("bucket not found")) {
+    await ensureImagesBucketExists(true);
+
+    const retryUpload = await supabase.storage
+      .from(SUPABASE_IMAGES_BUCKET)
+      .upload(filePath, imageBuffer, {
+        contentType: parsedImage.type || "image/jpeg",
+        upsert: false,
+      });
+
+    imageData = retryUpload.data;
+    error = retryUpload.error;
+  }
+
+  if (error || !imageData?.fullPath) {
+    throw new Error(error?.message || "Failed to upload scan image");
+  }
+
+  return getSupabasePublicUrl(imageData.fullPath);
+};
+
+const ensureCustomerRecord = async (userId: string) => {
+  await prisma.customer.upsert({
+    where: { id: userId },
+    update: {},
+    create: { id: userId },
+  });
+};
+
 const getGeminiScanErrorMessage = (error: unknown): string => {
   const status =
     typeof error === "object" &&
@@ -136,6 +204,16 @@ const getGeminiScanErrorMessage = (error: unknown): string => {
     return "Invalid GOOGLE_API_KEY configuration for Gemini.";
   }
 
+  if (
+    rawMessage.includes("SUPABASE_SERVICE_ROLE_KEY is using a publishable key")
+  ) {
+    return "Server storage is misconfigured. Set SUPABASE_SERVICE_ROLE_KEY to your Supabase service-role key.";
+  }
+
+  if (rawMessage.toLowerCase().includes("row-level security policy")) {
+    return "Image upload blocked by Supabase RLS. Ensure server uploads use a service-role key or add an authenticated storage insert policy.";
+  }
+
   return ScanStatus.ERROR;
 };
 
@@ -152,6 +230,7 @@ export const scanPestImage = async (
 
   const session = await auth();
   const user = session?.user;
+
   try {
     const response = await gemini.models.generateContent({
       model: GEMINI_MODEL,
@@ -178,28 +257,25 @@ export const scanPestImage = async (
    if (res.toLowerCase().includes("error: this is not a poultry bird") || res.toLowerCase().includes("error: no pest detected"))
   return ScanStatus.IMAGENOTPEST;
 
-    if (user?.role !== Role.CUSTOMER) return res;
+    if (!user?.id) return res;
 
-    // Upload image to Supabase
-    const imageBuffer = Buffer.from(parsedImage.data, "base64");
-    const folderName = `customer/${user!.id}/pests`;
-    const fileName = `${folderName}/${Date.now()}_${parsedImage.name}`;
-    const { data: imageData, error } = await supabase.storage
-      .from("images")
-      .upload(fileName, imageBuffer, {
-        contentType: parsedImage.type,
-      });
+    const uploadedImageUrl = await uploadScanImageAndGetUrl({
+      userId: user.id,
+      category: "pests",
+      parsedImage,
+    });
+
+    await ensureCustomerRecord(user.id);
 
     const pestName = getResourceName(res);
     const pestDescription = getResourceDescription(res);
 
-    // Store scan in database
     await prisma.scan.create({
       data: {
         name: pestName,
         description: pestDescription,
-        customerId: user!.id!,
-        url: getSupabasePublicUrl(imageData?.fullPath),
+        customerId: user.id,
+        url: uploadedImageUrl,
         type: ScanType.PEST,
       },
     });
@@ -211,19 +287,19 @@ export const scanPestImage = async (
       },
     });
 
-    // TODO: Upload image to its own folder later and not use customer scan reference
-
     if (!isPestStored)
       await prisma.pest.create({
         data: {
           name: pestName,
           text: pestDescription,
-          images: [getSupabasePublicUrl(imageData?.fullPath)],
+          images: [uploadedImageUrl],
           slug: pestName.toLowerCase().replace(/\s/g, "-"),
         },
       });
 
     revalidatePath("/resources");
+    revalidatePath("/customer/scan-history");
+    revalidatePath("/farmer/scan-history");
 
     return res;
   } catch (error) {
@@ -272,28 +348,25 @@ text: "Analyze the uploaded image carefully and determine whether it shows a pou
     if (res.toLowerCase().includes("error: this is not a poultry bird") || res.toLowerCase().includes("error: no disease detected"))
   return ScanStatus.IMAGENOTDISEASE;
 
-    if (user?.role !== Role.CUSTOMER) return res;
+    if (!user?.id) return res;
 
-    // Upload image to Supabase
-    const imageBuffer = Buffer.from(parsedImage.data, "base64");
-    const folderName = `customer/${user!.id}/diseases`;
-    const fileName = `${folderName}/${Date.now()}_${parsedImage.name}`;
-    const { data: imageData, error } = await supabase.storage
-      .from("images")
-      .upload(fileName, imageBuffer, {
-        contentType: parsedImage.type,
-      });
+    const uploadedImageUrl = await uploadScanImageAndGetUrl({
+      userId: user.id,
+      category: "diseases",
+      parsedImage,
+    });
+
+    await ensureCustomerRecord(user.id);
 
     const diseaseName = getResourceName(res);
     const diseaseDescription = getResourceDescription(res);
 
-    // Store scan in database
     await prisma.scan.create({
       data: {
         name: diseaseName,
         description: diseaseDescription,
-        customerId: user!.id!,
-        url: getSupabasePublicUrl(imageData?.fullPath),
+        customerId: user.id,
+        url: uploadedImageUrl,
         type: ScanType.DISEASE,
       },
     });
@@ -305,19 +378,19 @@ text: "Analyze the uploaded image carefully and determine whether it shows a pou
       },
     });
 
-    // TODO: Upload image to its own folder later and not use customer scan reference
-
     if (!isDiseaseStored)
       await prisma.disease.create({
         data: {
           name: diseaseName,
           text: diseaseDescription,
-          images: [getSupabasePublicUrl(imageData?.fullPath)],
+          images: [uploadedImageUrl],
           slug: diseaseName.toLowerCase().replace(/\s/g, "-"),
         },
       });
 
     revalidatePath("/resources");
+    revalidatePath("/customer/scan-history");
+    revalidatePath("/farmer/scan-history");
 
     return res;
   } catch (error) {
@@ -482,7 +555,7 @@ export const addPest = async (
   try {
     const folderName = `pests/${name}`;
     const fileName = `${folderName}/${Date.now()}_${parsedImage.name}`;
-    const { data: imageData, error } = await supabase.storage
+    const { data: imageData, error } = await getSupabaseAdminClient().storage
       .from("images")
       .upload(fileName, imageBuffer, {
         contentType: parsedImage.type,
@@ -541,7 +614,7 @@ export const addDisease = async (
   try {
     const folderName = `diseases/${name}`;
     const fileName = `${folderName}/${Date.now()}_${parsedImage.name}`;
-    const { data: imageData, error } = await supabase.storage
+    const { data: imageData, error } = await getSupabaseAdminClient().storage
       .from("images")
       .upload(fileName, imageBuffer, {
         contentType: parsedImage.type,
@@ -812,7 +885,7 @@ export const uploadImages = async ({
     const imageBuffer = Buffer.from(base64Data, "base64");
     const folderName = `resource`;
     const fileName = `${folderName}/${Date.now()}_${file.name}`;
-    const { data: imageData, error } = await supabase.storage
+    const { data: imageData, error } = await getSupabaseAdminClient().storage
       .from("images")
       .upload(fileName, imageBuffer, {
         contentType: file.type,
@@ -872,7 +945,7 @@ export const deleteImage = async ({
   }
 
   // Delete the file from Supabase storage
-  const { error: deleteError } = await supabase.storage
+  const { error: deleteError } = await getSupabaseAdminClient().storage
     .from("images")
     .remove([`resource/${fileName}`]);
 
@@ -958,12 +1031,12 @@ export const registerSupplier = async (
     const folderName = `supplier/${name}`;
     const logoFileName = `${folderName}/${Date.now()}_${parsedLogo.name}`;
     const licenseFileName = `${folderName}/${Date.now()}_${parsedLicense.name}`;
-    const { data: logoData, error: logoError } = await supabase.storage
+    const { data: logoData, error: logoError } = await getSupabaseAdminClient().storage
       .from("images")
       .upload(logoFileName, logoBuffer, {
         contentType: parsedLogo.type,
       });
-    const { data: licenseData, error: licenseError } = await supabase.storage
+    const { data: licenseData, error: licenseError } = await getSupabaseAdminClient().storage
       .from("images")
       .upload(licenseFileName, licenseBuffer, {
         contentType: parsedLicense.type,
@@ -1233,7 +1306,7 @@ export async function addProduct(prevState: any, formData: FormData) {
     const imageUrls = await Promise.all(
       imageBuffers.map(async (imageBuffer: any) => {
         const fileName = `${folderName}/${Date.now()}_${Math.random()}.jpeg`;
-        const { data: imageData, error } = await supabase.storage
+        const { data: imageData, error } = await getSupabaseAdminClient().storage
           .from("images")
           .upload(fileName, imageBuffer, {
             contentType: "image/jpeg",
@@ -1302,7 +1375,7 @@ export const deleteProduct = async ({
         throw new Error("Invalid image URL");
       }
 
-      const { error: deleteError } = await supabase.storage
+      const { error: deleteError } = await getSupabaseAdminClient().storage
         .from("images")
         .remove([`products/${fileName}`]);
 
@@ -1454,7 +1527,7 @@ export async function editProduct(
         const fileName = imageUrl.split("/").pop();
         if (!fileName) console.warn(`Skipping invalid image URL: ${imageUrl}`);
 
-        const { error: deleteError } = await supabase.storage
+        const { error: deleteError } = await getSupabaseAdminClient().storage
           .from("images")
           .remove([`products/${productSupplier?.product.name}/${fileName}`]);
         if (deleteError) {
@@ -1469,7 +1542,7 @@ export async function editProduct(
     const imageUrls = await Promise.all(
       imageBuffers.map(async (imageBuffer: any) => {
         const fileName = `${folderName}/${Date.now()}_${Math.random()}.jpeg`;
-        const { data: imageData, error } = await supabase.storage
+        const { data: imageData, error } = await getSupabaseAdminClient().storage
           .from("images")
           .upload(fileName, imageBuffer, {
             contentType: "image/jpeg",

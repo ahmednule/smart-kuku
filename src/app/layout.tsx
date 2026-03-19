@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "../providers";
 import { Toaster } from "react-hot-toast";
+import { auth } from "@/auth";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -12,6 +13,7 @@ import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import Footer from "@/components/page/home-page/Footer";
 import Header from "@/components/ui/header/Header";
+import ChatUI from "@/components/page/home-page/ChatUI";
 
 config.autoAddCss = false;
 
@@ -23,11 +25,14 @@ export const metadata: Metadata = {
     "SmartKuku is an autonomous poultry farm decision agent that continuously monitors flock health, feed, water, egg output, and environment to trigger timely, explainable actions for smallholder farmers.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+  const isLoggedIn = Boolean(session?.user?.id);
+
   return (
     <html lang="en">
       <body className={inter.className}>
@@ -35,6 +40,7 @@ export default function RootLayout({
           <Toaster />
           <Header />
           {children}
+          {isLoggedIn && <ChatUI />}
           <Footer />
         </Providers>
       </body>
