@@ -7,7 +7,6 @@ import {
   convertMarkdownToHtml,
 } from "@/lib/utils";
 import { Button, Image } from "@nextui-org/react";
-import type { Disease, Pest } from "@prisma/client";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import ReactQuill from "react-quill";
@@ -34,6 +33,7 @@ import { deleteImage, uploadImages } from "@/lib/actions";
 import { ResourceType } from "@/lib/types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { StaticResource } from "@/lib/resources-data";
 
 const ResourceContent = ({
   isAdmin,
@@ -46,7 +46,7 @@ const ResourceContent = ({
   type: ResourceType;
   editFn: ({ id, content }: { id: string; content: string }) => Promise<void>;
   deleteResource: (id: string) => Promise<void>;
-  resource: Pest | Disease;
+  resource: StaticResource;
 }) => {
   const { name, text, id, images } = resource;
   const [content, setContent] = useState(convertMarkdownToHtml(text));

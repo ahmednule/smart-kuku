@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Farm Biosecurity Gate</title>
+  <desc id="desc">Illustration representing farm biosecurity and controlled entry.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eff6ff" />
+      <stop offset="100%" stop-color="#e0f2fe" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)" />
+  <rect x="120" y="170" width="960" height="500" rx="24" fill="#ffffff" stroke="#0284c7" stroke-width="5" />
+  <rect x="290" y="250" width="620" height="360" rx="20" fill="#e0f2fe" stroke="#0284c7" stroke-width="5" />
+  <line x1="600" y1="250" x2="600" y2="610" stroke="#0284c7" stroke-width="6" />
+  <circle cx="565" cy="430" r="12" fill="#0369a1" />
+  <circle cx="635" cy="430" r="12" fill="#0369a1" />
+  <rect x="470" y="300" width="260" height="90" rx="12" fill="#bae6fd" stroke="#0369a1" stroke-width="4" />
+  <text x="510" y="357" font-family="Verdana, sans-serif" font-size="36" fill="#0c4a6e">BIOSECURE</text>
+  <text x="180" y="735" font-family="Verdana, sans-serif" font-size="44" font-weight="700" fill="#0c4a6e">Control Entry, Protect Birds</text>
+</svg>

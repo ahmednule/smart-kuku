@@ -1,23 +1,19 @@
-import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import React from "react";
 import ResourceContent from "@/components/page/resource-page/ResourceContent";
-import { auth } from "@/auth";
-import { Role } from "@/generated/prisma/enums";
 import { deleteDisease, editDisease } from "@/lib/actions";
 import MobileNav from "@/components/ui/MobileNav";
 import { ResourceType } from "@/lib/types";
+import { STATIC_DISEASES } from "@/lib/resources-data";
 
-const DiseasePage = async ({ params }: { params: { slug: string } }) => {
-  const disease = await prisma.disease.findUnique({
-    where: {
-      slug: params.slug,
-    },
-  });
+const DiseasePage = async ({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) => {
+  const { slug } = await params;
+  const disease = STATIC_DISEASES.find((item) => item.slug === slug);
   if (!disease) notFound();
-  const session = await auth();
-  const user = session?.user;
-  const isAdmin = user?.role === Role.ADMIN;
 
   return (
     <>
@@ -27,7 +23,7 @@ const DiseasePage = async ({ params }: { params: { slug: string } }) => {
         type={ResourceType.DISEASE}
         editFn={editDisease}
         resource={disease}
-        isAdmin={isAdmin}
+        isAdmin={false}
       />
     </>
   );

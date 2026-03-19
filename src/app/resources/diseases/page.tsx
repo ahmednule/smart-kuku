@@ -1,14 +1,10 @@
 import MobileNav from "@/components/ui/MobileNav";
-import prisma from "@/lib/prisma";
+import { STATIC_DISEASES } from "@/lib/resources-data";
 import Link from "next/link";
 import React from "react";
 
-const AllDiseasesPage = async () => {
-  const diseases = await prisma.disease.findMany({
-    orderBy: {
-      name: "asc",
-    },
-  });
+const AllDiseasesPage = () => {
+  const diseases = STATIC_DISEASES;
   return (
     <>
       <MobileNav />

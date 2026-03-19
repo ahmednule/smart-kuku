@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Flock Observation</title>
+  <desc id="desc">Illustration of flock observation and symptom checks.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5f3ff" />
+      <stop offset="100%" stop-color="#ede9fe" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)" />
+  <rect x="120" y="170" width="960" height="500" rx="24" fill="#ffffff" stroke="#7c3aed" stroke-width="5" />
+  <ellipse cx="360" cy="470" rx="140" ry="95" fill="#fde68a" stroke="#92400e" stroke-width="6" />
+  <circle cx="475" cy="430" r="58" fill="#fcd34d" stroke="#92400e" stroke-width="6" />
+  <polygon points="520,442 575,455 520,468" fill="#f97316" />
+  <circle cx="500" cy="418" r="7" fill="#111827" />
+  <circle cx="760" cy="380" r="120" fill="#ddd6fe" stroke="#6d28d9" stroke-width="6" />
+  <line x1="840" y1="460" x2="930" y2="550" stroke="#6d28d9" stroke-width="16" stroke-linecap="round" />
+  <text x="690" y="388" font-family="Verdana, sans-serif" font-size="34" fill="#5b21b6">Observe</text>
+  <text x="702" y="428" font-family="Verdana, sans-serif" font-size="34" fill="#5b21b6">Symptoms</text>
+  <text x="180" y="735" font-family="Verdana, sans-serif" font-size="44" font-weight="700" fill="#4c1d95">Daily Flock Observation</text>
+</svg>

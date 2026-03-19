@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Poultry Litter Management</title>
+  <desc id="desc">Illustration of dry litter management for pest prevention.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fefce8" />
+      <stop offset="100%" stop-color="#fef3c7" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)" />
+  <rect x="120" y="160" width="960" height="500" rx="26" fill="#ffffff" stroke="#ca8a04" stroke-width="5" />
+  <path d="M180 560 C280 510 420 510 520 560 C620 610 760 610 860 560 C920 530 980 530 1020 550" fill="none" stroke="#a16207" stroke-width="10" />
+  <g fill="#eab308">
+    <circle cx="290" cy="500" r="10" />
+    <circle cx="320" cy="530" r="9" />
+    <circle cx="540" cy="520" r="11" />
+    <circle cx="700" cy="540" r="10" />
+    <circle cx="890" cy="510" r="12" />
+  </g>
+  <rect x="220" y="250" width="240" height="180" rx="18" fill="#fef9c3" stroke="#a16207" stroke-width="4" />
+  <text x="258" y="325" font-family="Verdana, sans-serif" font-size="34" fill="#854d0e">DRY</text>
+  <text x="244" y="365" font-family="Verdana, sans-serif" font-size="34" fill="#854d0e">LITTER</text>
+  <rect x="760" y="250" width="220" height="180" rx="18" fill="#fef2f2" stroke="#dc2626" stroke-width="4" />
+  <text x="798" y="327" font-family="Verdana, sans-serif" font-size="32" fill="#991b1b">WET</text>
+  <text x="776" y="367" font-family="Verdana, sans-serif" font-size="32" fill="#991b1b">RISK</text>
+  <text x="180" y="735" font-family="Verdana, sans-serif" font-size="44" font-weight="700" fill="#713f12">Litter Management Matters</text>
+</svg>

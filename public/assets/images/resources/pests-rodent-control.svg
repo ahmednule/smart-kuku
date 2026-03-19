@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Rodent Control in Poultry Farm</title>
+  <desc id="desc">Illustration of feed protection and rodent control near poultry housing.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff7ed" />
+      <stop offset="100%" stop-color="#ffedd5" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)" />
+  <rect x="140" y="180" width="920" height="470" rx="24" fill="#ffffff" stroke="#ea580c" stroke-width="5" />
+  <rect x="220" y="280" width="220" height="300" rx="20" fill="#fffbeb" stroke="#b45309" stroke-width="5" />
+  <text x="260" y="440" font-family="Verdana, sans-serif" font-size="42" fill="#92400e">FEED</text>
+  <ellipse cx="710" cy="480" rx="130" ry="95" fill="#d6d3d1" stroke="#57534e" stroke-width="6" />
+  <circle cx="820" cy="430" r="55" fill="#d6d3d1" stroke="#57534e" stroke-width="6" />
+  <circle cx="840" cy="415" r="8" fill="#111827" />
+  <circle cx="798" cy="368" r="20" fill="#e7e5e4" stroke="#57534e" stroke-width="5" />
+  <path d="M570 505 C500 560 470 640 430 690" fill="none" stroke="#57534e" stroke-width="8" />
+  <line x1="920" y1="280" x2="1030" y2="390" stroke="#dc2626" stroke-width="16" />
+  <line x1="1030" y1="280" x2="920" y2="390" stroke="#dc2626" stroke-width="16" />
+  <text x="180" y="735" font-family="Verdana, sans-serif" font-size="44" font-weight="700" fill="#9a3412">Protect Feed from Rodents</text>
+</svg>

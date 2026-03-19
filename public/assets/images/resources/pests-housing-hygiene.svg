@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Poultry Housing Hygiene</title>
+  <desc id="desc">Illustration of poultry house cleaning and hygiene control.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eff6ff" />
+      <stop offset="100%" stop-color="#dbeafe" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)" />
+  <rect x="120" y="220" width="960" height="430" rx="24" fill="#ffffff" stroke="#2563eb" stroke-width="5" />
+  <polygon points="120,280 600,80 1080,280" fill="#93c5fd" stroke="#1d4ed8" stroke-width="5" />
+  <rect x="260" y="360" width="220" height="240" rx="16" fill="#f8fafc" stroke="#2563eb" stroke-width="4" />
+  <rect x="520" y="360" width="220" height="240" rx="16" fill="#f8fafc" stroke="#2563eb" stroke-width="4" />
+  <rect x="780" y="360" width="160" height="240" rx="16" fill="#f8fafc" stroke="#2563eb" stroke-width="4" />
+  <path d="M220 640 C300 590 380 590 460 640" fill="none" stroke="#16a34a" stroke-width="8" />
+  <path d="M500 640 C580 590 660 590 740 640" fill="none" stroke="#16a34a" stroke-width="8" />
+  <circle cx="980" cy="150" r="60" fill="#bfdbfe" />
+  <text x="185" y="730" font-family="Verdana, sans-serif" font-size="44" font-weight="700" fill="#1e3a8a">Clean House, Healthy Flock</text>
+</svg>

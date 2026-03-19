@@ -1,22 +1,18 @@
-import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import ResourceContent from "@/components/page/resource-page/ResourceContent";
-import { auth } from "@/auth";
-import { Role } from "@/generated/prisma/enums";
 import { deletePest, editPest } from "@/lib/actions";
 import MobileNav from "@/components/ui/MobileNav";
 import { ResourceType } from "@/lib/types";
+import { STATIC_PESTS } from "@/lib/resources-data";
 
-const PestPage = async ({ params }: { params: { slug: string } }) => {
-  const pest = await prisma.pest.findUnique({
-    where: {
-      slug: params.slug,
-    },
-  });
+const PestPage = async ({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) => {
+  const { slug } = await params;
+  const pest = STATIC_PESTS.find((item) => item.slug === slug);
   if (!pest) notFound();
-  const session = await auth();
-  const user = session?.user;
-  const isAdmin = user?.role === Role.ADMIN;
 
   return (
     <>
@@ -26,7 +22,7 @@ const PestPage = async ({ params }: { params: { slug: string } }) => {
         type={ResourceType.PEST}
         editFn={editPest}
         resource={pest}
-        isAdmin={isAdmin}
+        isAdmin={false}
       />
     </>
   );

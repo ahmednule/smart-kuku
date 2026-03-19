@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Flock Treatment Plan</title>
+  <desc id="desc">Illustration of treatment planning for poultry disease response.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ecfdf5" />
+      <stop offset="100%" stop-color="#d1fae5" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)" />
+  <rect x="140" y="150" width="920" height="500" rx="24" fill="#ffffff" stroke="#059669" stroke-width="5" />
+  <rect x="220" y="240" width="560" height="320" rx="18" fill="#f0fdf4" stroke="#10b981" stroke-width="4" />
+  <g stroke="#047857" stroke-width="8" stroke-linecap="round">
+    <line x1="270" y1="320" x2="730" y2="320" />
+    <line x1="270" y1="390" x2="730" y2="390" />
+    <line x1="270" y1="460" x2="730" y2="460" />
+  </g>
+  <g fill="#10b981">
+    <circle cx="245" cy="320" r="12" />
+    <circle cx="245" cy="390" r="12" />
+    <circle cx="245" cy="460" r="12" />
+  </g>
+  <rect x="840" y="260" width="130" height="250" rx="18" fill="#a7f3d0" stroke="#047857" stroke-width="5" />
+  <rect x="876" y="220" width="58" height="55" rx="8" fill="#34d399" stroke="#047857" stroke-width="5" />
+  <text x="180" y="735" font-family="Verdana, sans-serif" font-size="44" font-weight="700" fill="#065f46">Treatment and Follow-up Plan</text>
+</svg>

@@ -1,14 +1,10 @@
 import MobileNav from "@/components/ui/MobileNav";
-import prisma from "@/lib/prisma";
+import { STATIC_PESTS } from "@/lib/resources-data";
 import Link from "next/link";
 import React from "react";
 
-const AllPestsPage = async () => {
-  const pests = await prisma.pest.findMany({
-    orderBy: {
-      name: "asc",
-    },
-  });
+const AllPestsPage = () => {
+  const pests = STATIC_PESTS;
   return (
     <>
       <MobileNav />
@@ -21,7 +17,7 @@ const AllPestsPage = async () => {
       </p>
       {
         <ul className="grid grid-cols-2 mt-8 text-emerald-600 md:grid-cols-3">
-          {pests.map((pest: { id: React.Key | null | undefined; slug: any; name: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; }, index: number) => (
+          {pests.map((pest, index) => (
             <li key={pest.id}>
               <Link
                 className="hover:text-emerald-700"

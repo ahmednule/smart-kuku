@@ -1,20 +1,12 @@
 import React from "react";
 import { faCaretRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import prisma from "@/lib/prisma";
 import NavLink from "@/components/ui/NavLink";
+import { STATIC_DISEASES, STATIC_PESTS } from "@/lib/resources-data";
 
-const ResourceNav = async () => {
-  const pests = await prisma.pest.findMany({
-    orderBy: {
-      name: "asc",
-    },
-  });
-  const diseases = await prisma.disease.findMany({
-    orderBy: {
-      name: "asc",
-    },
-  });
+const ResourceNav = () => {
+  const pests = STATIC_PESTS;
+  const diseases = STATIC_DISEASES;
   return (
       <nav>
         <h2 className="text-emerald-200 text-xl">
