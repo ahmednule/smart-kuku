@@ -1,11 +1,6 @@
 import React from "react";
-import { isLinkActive } from "@/lib/utils";
 import {
-  cn,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
+  Button,
   Spinner,
 } from "@nextui-org/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -20,56 +15,13 @@ const LoginDropdown = () => {
   return (
     <>
       {!user && !isLoading && (
-        <Dropdown>
-          <DropdownTrigger>
-            <div className="text-white space-x-2 hover:cursor-pointer">
-              <span>Login</span>
-              <FontAwesomeIcon icon={faRightToBracket} />
-            </div>
-          </DropdownTrigger>
-          <DropdownMenu aria-label="Static Actions">
-            <DropdownItem
-              onPress={() =>
-                signIn("google", { callbackUrl: "/user/customer/login" })
-              }
-              className={cn("hover:!bg-emerald-600 hover:!text-white")}
-              key="customer"
-            >
-              Customer
-            </DropdownItem>
-            <DropdownItem
-              onPress={() =>
-                signIn("google", {
-                  callbackUrl: "/user/consultant/login",
-                })
-              }
-              className={cn("hover:!bg-emerald-600 hover:!text-white")}
-              key="consultant"
-            >
-              Consultant
-            </DropdownItem>
-            <DropdownItem
-              onPress={() =>
-                signIn("google", {
-                  callbackUrl: "/user/supplier/login",
-                })
-              }
-              className={cn("hover:!bg-emerald-600 hover:!text-white")}
-              key="supplier"
-            >
-              Supplier
-            </DropdownItem>
-            <DropdownItem
-              onPress={() =>
-                signIn("google", { callbackUrl: "/user/admin/login" })
-              }
-              className={cn("hover:!bg-emerald-600 hover:!text-white")}
-              key="admin"
-            >
-              Admin
-            </DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
+        <Button
+          startContent={<FontAwesomeIcon icon={faRightToBracket} />}
+          className="bg-emerald-500 hover:bg-emerald-600 text-white"
+          onPress={() => signIn("google")}
+        >
+          Login
+        </Button>
       )}
       {isLoading && <Spinner color="success" />}
       {user && !isLoading && (

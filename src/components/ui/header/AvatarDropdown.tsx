@@ -30,14 +30,18 @@ const AvatarDropdown = ({
   const isCustomer = userRole === "CUSTOMER";
   const isConsultant = userRole === "CONSULTANT";
   const isAdmin = userRole === "ADMIN";
+  const isFarmer = userRole === "FARMER";
+  const isSupplier = userRole === "SUPPLIER";
   const pathname = usePathname();
   const route =
     isCustomer
       ? "/customer"
       : isConsultant
       ? "/consultant"
-      : userRole === "SUPPLIER"
-      ? "/cupplier"
+      : isSupplier
+      ? "/supplier"
+      : isFarmer
+      ? "/farmer"
       : "/admin";
   return (
     <Dropdown showArrow>
@@ -87,6 +91,8 @@ const AvatarDropdown = ({
                 ? "/consultant/dashboard"
                 : isAdmin
                 ? "/admin/dashboard"
+                : isFarmer
+                ? "/farmer/dashboard"
                 : "/supplier/dashboard"
             }
             `}
@@ -97,6 +103,8 @@ const AvatarDropdown = ({
               ? "Consultant Panel"
               : isAdmin
               ? "Admin Panel"
+              : isFarmer
+              ? "Farmer Dashboard"
               : "Supplier Panel"}
           </DropdownItem>
         </DropdownSection>

@@ -113,6 +113,25 @@ export default function ChatButton() {
     startListening();
   }, [isListening, startListening, stopListening]);
 
+  useEffect(() => {
+    const handleStartTalking = () => {
+      setIsOpen(true);
+      setError("");
+      if (!isListening) {
+        startListening();
+      }
+    };
+
+    window.addEventListener("kukusmart:startTalking", handleStartTalking);
+
+    return () => {
+      window.removeEventListener(
+        "kukusmart:startTalking",
+        handleStartTalking
+      );
+    };
+  }, [isListening, startListening]);
+
   const handleSendMessage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;

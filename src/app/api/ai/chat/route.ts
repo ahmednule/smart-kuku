@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-2.5-flash";
 
 type SupportedLanguage = "sw-KE" | "en-US";
 
@@ -11,6 +11,66 @@ const buildLanguageInstruction = (language: SupportedLanguage) => {
   }
 
   return "Default to English, but if the farmer asks in Kiswahili, you may answer in Kiswahili.";
+};
+
+const getGeminiErrorPayload = (error: unknown) => {
+  const status =
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof (error as { status?: unknown }).status === "number"
+      ? (error as { status: number }).status
+      : 500;
+
+  const rawMessage =
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+      ? (error as { message: string }).message
+      : "";
+
+  if (
+    status === 403 &&
+    (rawMessage.includes("SERVICE_DISABLED") ||
+      rawMessage.includes("Generative Language API has not been used"))
+  ) {
+    return {
+      status: 503,
+      message:
+        "Gemini is not enabled for this Google Cloud project yet. Enable the Generative Language API, then retry in a few minutes.",
+    };
+  }
+
+  if (status === 401 || rawMessage.toLowerCase().includes("api key")) {
+    return {
+      status: 401,
+      message: "Invalid GOOGLE_API_KEY configuration for Gemini.",
+    };
+  }
+
+  if (
+    status === 429 ||
+    rawMessage.includes("RESOURCE_EXHAUSTED") ||
+    rawMessage.toLowerCase().includes("quota exceeded")
+  ) {
+    const retryMatch = rawMessage.match(/retry in\s+([\d.]+)s/i);
+    const retryAfterSeconds = retryMatch
+      ? Math.max(1, Math.ceil(Number(retryMatch[1])))
+      : 15;
+
+    return {
+      status: 429,
+      message:
+        "Gemini quota is exhausted for this project. Check billing/quota in Google AI Studio or Google Cloud and retry shortly.",
+      retryAfterSeconds,
+    };
+  }
+
+  return {
+    status: 500,
+    message: "Failed to process AI request.",
+  };
 };
 
 export async function POST(request: Request) {
@@ -72,11 +132,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ response: text }, { status: 200 });
   } catch (error) {
     console.error("Gemini chat route error:", error);
-    return NextResponse.json(
+    const payload = getGeminiErrorPayload(error);
+    const response = NextResponse.json(
       {
-        message: "Failed to process AI request.",
+        message: payload.message,
       },
-      { status: 500 }
+      { status: payload.status }
     );
+
+    if (
+      "retryAfterSeconds" in payload &&
+      typeof payload.retryAfterSeconds === "number"
+    ) {
+      response.headers.set("Retry-After", String(payload.retryAfterSeconds));
+    }
+
+    return response;
   }
 }

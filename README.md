@@ -1,121 +1,91 @@
-# KukuSmart | Autonomous Poultry Farm Decision Agent
+# KukuSmart
 
-MKU AI Hackathon 2025 - School of Computing and Informatics
+KukuSmart is a poultry-focused farm assistant built with Next.js. It combines farm workflows (resources, scans, supplier/store flows) with Gemini-powered assistant features for farmer Q and A, image-based checks, and progress guidance.
 
-KukuSmart is an AI-powered autonomous decision-making system for smallholder poultry farmers in Kenya. It continuously monitors flock health, feed and water levels, egg production, and environmental conditions, then decides and recommends what to do next with clear reasoning.
+Built for MKU AI Hackathon 2025 (School of Computing and Informatics).
 
-## Snapshot
+Event context:
+- Mount Kenya University, School of Computing and Informatics
+- Google Developer Group (GDG) on Campus MKU
 
-- 7M+ smallholder farmers
-- 15-30% average flock loss per cycle
-- KES 4B+ estimated annual revenue lost
-- Under 60s AI response loop
+## Current Setup
 
-## 1. Overview
+- Frontend and backend in one Next.js App Router project.
+- Server Actions handle most business logic.
+- Prisma 7 with generated client output under src/generated/prisma.
+- PostgreSQL database access through Prisma adapter-pg.
+- Supabase Storage for image uploads.
+- NextAuth v5 for authentication and roles.
+- Gemini API via @google/genai for AI responses.
+- Homepage chat supports voice input/output with Kiswahili (default) and English.
 
-KukuSmart is designed to protect birds and maximize farm revenue through a continuous autonomous cycle:
+## AI and Voice Features
 
-Perceive -> Reason -> Act -> Explain
+- API route for chat: src/app/api/ai/chat/route.ts
+- Uses GOOGLE_API_KEY on the server.
+- Language-aware response behavior:
+	- sw-KE (default)
+	- en-US
+- Browser voice features in homepage chat:
+	- Speech-to-text for farmer input
+	- Text-to-speech for assistant replies
 
-The platform is built around a modern full-stack approach:
+## Environment Variables
 
-- Frontend: React + Apollo Client
-- Backend API: Node.js + Apollo Server + GraphQL
-- Data: PostgreSQL
-- AI agent layer for decision support and explanations
+Copy .env.example to .env and fill values.
 
-## 2. The Problem
+Required keys:
 
-Smallholder poultry farmers face repeated avoidable losses due to:
-
-- Late detection of disease outbreaks (for example Newcastle, Gumboro, Coccidiosis)
-- Water shortages that trigger heat stress quickly, especially in high temperatures
-- Feed mismanagement that silently reduces margins
-- Poor sale timing based on urgent cash needs instead of data
-- Low or no farm data capture for historical planning
-
-The challenge is not farmer commitment. The challenge is missing continuous monitoring and timely decision support.
-
-## 3. The Solution
-
-KukuSmart runs an autonomous agent cycle whenever new metrics are logged or critical thresholds are breached.
-
-- Perceive: Collect current farm metrics, trends, and unresolved alerts
-- Reason: Analyze patterns and identify the single most urgent issue
-- Act: Generate the highest-priority action (health alert, water/feed action, sale timing suggestion)
-- Explain: Save and display plain-language reasoning in the dashboard
-
-Auto-triggered response is expected on critical events such as:
-
-- Water levels below safe threshold
-- High house temperature
-- Mortality above expected percentage
-
-## 4. Key Features
-
-- Autonomous agent cycle that can run without manual prompting
-- Real-time GraphQL subscriptions for live alert updates
-- Voice input support (English - Kenya) for quick field logging
-- Multi-flock support for layers and broilers on one farm
-- Decision audit trail for transparency and accountability
-- Data-driven sale timing support
-- Auto-threshold triggers for urgent risk conditions
-
-## 5. Technology Stack
-
-| Layer | Component | Technology |
-| --- | --- | --- |
-| Frontend | Web app | React 18 + Apollo Client |
-| API | GraphQL server | Node.js + Apollo Server 4 |
-| Database | Persistent storage | PostgreSQL + Prisma |
-| Real-time | Event updates | GraphQL Subscriptions (WebSocket) |
-| Voice | Input mode | Web Speech API (English - Kenya) |
-
-## 6. Target Users
-
-- Smallholder poultry farmers (50-2,000 birds)
-- Agricultural extension officers managing multiple farms
-- Poultry cooperative managers monitoring member farm performance
-
-## 7. Expected Impact
-
-For a typical 500-bird layer farm, KukuSmart aims to support:
-
-- 20-30% reduction in flock mortality via earlier risk detection
-- 10-15% improvement in feed efficiency
-- 8-12% revenue improvement through smarter sale timing
-- Better farm records for planning, financing, and reporting
-
-## 8. Autonomous Systems Track Fit
-
-KukuSmart fits the Autonomous Systems track by operating independently with minimal human input. It perceives farm state, reasons over risk, and proposes actions with explanations.
-
-## 9. Team and Event
-
-Built at MKU AI Hackathon - March 18-19, 2025
-
-- School of Computing and Informatics, Mount Kenya University
-- Google Developer Group - Mount Kenya University Chapter
-
-KukuSmart moves poultry farming from reactive to proactive decision-making.
+- DATABASE_URL
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
+- AUTH_SECRET
+- AUTH_GOOGLE_ID
+- AUTH_GOOGLE_SECRET
+- AUTH_GITHUB_ID
+- AUTH_GITHUB_SECRET
+- GOOGLE_API_KEY
+- RESEND_API_KEY
+- ORG_EMAIL
+- GEOLOCATION_API
+- NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
 
 ## Local Development
 
-### Prerequisites
+1. Install dependencies
 
-- Node.js 18+
-- npm
-
-### Install
-
-```bash
 npm install
-```
 
-### Run
+2. Generate Prisma client
 
-```bash
+npx prisma generate
+
+3. Start dev server
+
 npm run dev
-```
 
-Open http://localhost:3000 in your browser.
+4. Open app
+
+http://localhost:3000
+
+## Scripts
+
+- npm run dev
+- npm run build
+- npm run start
+- npm run lint
+
+## Notes
+
+- The app now uses Gemini, not OpenAI.
+- Prisma enums used by app code come from src/generated/prisma/enums.ts.
+- If auth endpoints fail with MissingSecret, set AUTH_SECRET in .env.
+
+## Troubleshooting
+
+If you see Prisma runtime or module errors during dev:
+
+1. Delete .next
+2. Run npm install
+3. Run npx prisma generate
+4. Run npm run dev

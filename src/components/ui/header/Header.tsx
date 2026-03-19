@@ -11,9 +11,18 @@ import React, { useState } from "react";
 import NavLinksMenu from "./NavLinksMenu";
 import LoginDropdown from "./LoginDropdown";
 import MobileNavLinks from "./MobileNavLinks";
+import { usePathname } from "next/navigation";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  const hideOnAppShellRoutes = ["/admin", "/supplier", "/customer", "/farmer", "/profile"];
+  const shouldHideHeader = hideOnAppShellRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  if (shouldHideHeader) return null;
 
   return (
     <Navbar

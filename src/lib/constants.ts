@@ -5,8 +5,10 @@ import {
   faCog,
   faEdit,
   faEye,
+  faFlask,
   faHouse,
   faLineChart,
+  faMapLocationDot,
   faMessage,
   faUser,
   faUserDoctor,
@@ -162,6 +164,34 @@ export const SUPPLIER_ROUTES = [
     value: "Edit Product",
     icon: faEdit
   }
+];
+
+export const FARMER_ROUTES = [
+  {
+    path: "/farmer/dashboard",
+    value: "Dashboard",
+    icon: faHouse,
+  },
+  {
+    path: "/map",
+    value: "Farm Map",
+    icon: faMapLocationDot,
+  },
+  {
+    path: "/customer/scan-history",
+    value: "Scan History",
+    icon: faClockRotateLeft,
+  },
+  {
+    path: "/resources",
+    value: "Resources",
+    icon: faFlask,
+  },
+  {
+    path: "/profile",
+    value: "My Profile",
+    icon: faUser,
+  },
 ];
 
 export const initialPriceRange = [0, 10000];
