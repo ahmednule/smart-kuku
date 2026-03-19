@@ -78,8 +78,8 @@ export const initialDiseaseFormState = {
 export enum ScanStatus {
   SUCCESS = "Success",
   ERROR = "Something unexpected happened",
-  IMAGENOTPEST = "Image is not a pest",
-  IMAGENOTDISEASE = "Image is not a disease",
+IMAGENOTPEST="No pest detected. Please upload a clear image of a poultry bird showing signs of pest infestation.",
+IMAGENOTDISEASE= "No disease detected. Please upload a clear image of a poultry bird showing signs of illness."
 }
 
 export const ADMIN_ROUTES = [

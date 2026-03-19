@@ -45,7 +45,7 @@ import { redirect } from "next/navigation";
 import nodemailer from "nodemailer";
 
 const supabase = getServerSupabase();
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-2.5-flash";
 
 const getGoogleApiKey = () => {
   const apiKey = process.env.GOOGLE_API_KEY;
@@ -78,21 +78,80 @@ const getModelText = (response: any): string => {
   return text;
 };
 
+const parseUploadedImage = (formData: FormData) => {
+  const rawImage = formData.get("image");
+
+  if (!rawImage || typeof rawImage !== "string") {
+    throw new Error("Please upload one image before scanning.");
+  }
+
+  let parsedImage: any;
+  try {
+    parsedImage = JSON.parse(rawImage);
+  } catch {
+    throw new Error("Invalid image payload. Please re-upload your image.");
+  }
+
+  if (!parsedImage?.data) {
+    throw new Error("Image data is missing. Please upload the image again.");
+  }
+
+  return parsedImage;
+};
+
+const getGeminiScanErrorMessage = (error: unknown): string => {
+  const status =
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof (error as { status?: unknown }).status === "number"
+      ? (error as { status: number }).status
+      : 500;
+
+  const rawMessage =
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+      ? (error as { message: string }).message
+      : "";
+
+  if (
+    status === 429 ||
+    rawMessage.includes("RESOURCE_EXHAUSTED") ||
+    rawMessage.toLowerCase().includes("quota exceeded")
+  ) {
+    return "Gemini quota reached. Please retry shortly.";
+  }
+
+  if (
+    status === 403 &&
+    (rawMessage.includes("SERVICE_DISABLED") ||
+      rawMessage.includes("Generative Language API has not been used"))
+  ) {
+    return "Gemini API is not enabled for this project yet.";
+  }
+
+  if (status === 401 || rawMessage.toLowerCase().includes("api key")) {
+    return "Invalid GOOGLE_API_KEY configuration for Gemini.";
+  }
+
+  return ScanStatus.ERROR;
+};
+
 export const scanPestImage = async (
   formState: string,
   formData: FormData
 ): Promise<string> => {
-  const image = formData.get("image") as any;
-  if (image.size === 0) {
-    return ScanStatus.ERROR;
+  let parsedImage: any;
+  try {
+    parsedImage = parseUploadedImage(formData);
+  } catch (error) {
+    return error instanceof Error ? error.message : ScanStatus.ERROR;
   }
+
   const session = await auth();
   const user = session?.user;
-  const parsedImage = JSON.parse(image);
-
-  // text: "The image is a scan of a plant pest. Generate a response that includes: The name of the pest in singular form as the first word, Description: Provide a brief description of the pest, Damage: Describe the damage the pest causes to plants, Control: Outline the control measures for managing the pest, Treatment: Provide treatment options for the pest, including the medicine name and dosage. Ensure each section is very detailed in its own paragraph with the section headings bolded.",
-
-  // Fetching AI scan response
   try {
     const response = await gemini.models.generateContent({
       model: GEMINI_MODEL,
@@ -101,7 +160,7 @@ export const scanPestImage = async (
           role: "user",
           parts: [
             {
-              text: "The image is a scan of a plant pest. Generate a response that includes: 1. The name of the pest in singular form and bold as the first word, 2. Description, 3. Damage, 4. Control and 5. Treatment. Ensure each section is very detailed in its own paragraph with the section headings bolded and no spacing between a specific paragraph. Separate content with a br tag. If the image given is not a pest, the response should be the text 'Error: This is not a pest' in plain text",
+             text: "Analyze the uploaded image carefully and determine whether it shows a poultry bird (such as a hen, chicken, broiler, layer, chick, or any domestic fowl). If the image does NOT clearly show a poultry bird, respond with exactly: Error: This is not a poultry bird. If the bird appears healthy with no visible pest infestation, respond with exactly: Error: No pest detected on this bird. If a pest infestation is detected (e.g. mites, lice, fleas, worms, ticks), return only this format: first line = pest name in singular and bold (**Name**). Then provide five sections with bold headings in this exact order: **Description**, **Damage**, **Control**, **Treatment**. Keep all guidance practical and specific for smallholder poultry farmers in Kenya.",
             },
             {
               inlineData: {
@@ -116,8 +175,8 @@ export const scanPestImage = async (
     const res = getModelText(response);
 
     // Handle image not pest
-    if (res.includes("Error: This is not a pest"))
-      return ScanStatus.IMAGENOTPEST;
+   if (res.toLowerCase().includes("error: this is not a poultry bird") || res.toLowerCase().includes("error: no pest detected"))
+  return ScanStatus.IMAGENOTPEST;
 
     if (user?.role !== Role.CUSTOMER) return res;
 
@@ -168,7 +227,8 @@ export const scanPestImage = async (
 
     return res;
   } catch (error) {
-    return ScanStatus.ERROR;
+    console.error("Pest scan failed:", error);
+    return getGeminiScanErrorMessage(error);
   }
 };
 
@@ -176,21 +236,16 @@ export const scanDiseaseImage = async (
   formState: string,
   formData: FormData
 ): Promise<string> => {
-  const image = formData.get("image") as any;
-  if (image.size === 0) {
-    return ScanStatus.ERROR;
+  let parsedImage: any;
+  try {
+    parsedImage = parseUploadedImage(formData);
+  } catch (error) {
+    return error instanceof Error ? error.message : ScanStatus.ERROR;
   }
+
   const session = await auth();
   const user = session?.user;
-  const parsedImage = JSON.parse(image);
-  const fieldTag = formData.get("tag") as string;
-  const selectTag = formData.get("selectTag") as string;
 
-  const tag = fieldTag || selectTag;
-
-  // text: "The image is a scan of a plant pest. Generate a response that includes: The name of the pest in singular form as the first word, Description: Provide a brief description of the pest, Damage: Describe the damage the pest causes to plants, Control: Outline the control measures for managing the pest, Treatment: Provide treatment options for the pest, including the medicine name and dosage. Ensure each section is very detailed in its own paragraph with the section headings bolded.",
-
-  // Fetching AI scan response
   try {
     const response = await gemini.models.generateContent({
       model: GEMINI_MODEL,
@@ -199,7 +254,7 @@ export const scanDiseaseImage = async (
           role: "user",
           parts: [
             {
-              text: "The image given should be of a plant disease. Generate a response that comprises of: 1. The name of the disease in singular form first word, 2. Cause, 3. Symptoms, 4. Impact and 5. Treatment each in their own paragraphs with heading bold and separated with a br tagnpm. If the image given is not a disease, the response should be the text 'Error: This is not a disease'",
+text: "Analyze the uploaded image carefully and determine whether it shows a poultry bird (such as a hen, chicken, broiler, layer, chick, or any domestic fowl). If the image does NOT clearly show a poultry bird, respond with exactly: Error: This is not a poultry bird. If the bird appears healthy with no visible signs of disease, respond with exactly: Error: No disease detected on this bird. If a disease is detected (e.g. Newcastle disease, Gumboro, Coccidiosis, Marek's disease, Fowl pox, Fowl typhoid, Infectious Bronchitis), return only this format: first line = disease name in singular and bold (**Name**). Then provide five sections with bold headings in this exact order: **Cause**, **Symptoms**, **Impact**, **Control**, **Treatment**. Keep all guidance practical and specific for smallholder poultry farmers in Kenya.",
             },
             {
               inlineData: {
@@ -214,8 +269,8 @@ export const scanDiseaseImage = async (
     const res = getModelText(response);
 
     // Handle image not disease
-    if (res.includes("Error: This is not a disease"))
-      return ScanStatus.IMAGENOTDISEASE;
+    if (res.toLowerCase().includes("error: this is not a poultry bird") || res.toLowerCase().includes("error: no disease detected"))
+  return ScanStatus.IMAGENOTDISEASE;
 
     if (user?.role !== Role.CUSTOMER) return res;
 
@@ -240,7 +295,6 @@ export const scanDiseaseImage = async (
         customerId: user!.id!,
         url: getSupabasePublicUrl(imageData?.fullPath),
         type: ScanType.DISEASE,
-        tag,
       },
     });
 
@@ -267,7 +321,8 @@ export const scanDiseaseImage = async (
 
     return res;
   } catch (error) {
-    return ScanStatus.ERROR;
+    console.error("Disease scan failed:", error);
+    return getGeminiScanErrorMessage(error);
   }
 };
 
@@ -436,16 +491,6 @@ export const addPest = async (
     if (error) {
       throw error;
     }
-    // await prisma.pest.create({
-    //   data: {
-    //     name: data.name,
-    //     description: data.description,
-    //     control: data.control,
-    //     damage: data.damage,
-    //     slug: data.name.toLowerCase().replace(/\s/g, "-"),
-    //     image: getSupabasePublicUrl(imageData.fullPath),
-    //   },
-    // });
     return {
       ...initialAddPestFormState,
       db: "success",
@@ -505,17 +550,6 @@ export const addDisease = async (
     if (error) {
       throw error;
     }
-    // await prisma.disease.create({
-    //   data: {
-    //     name: data.name,
-    //     cause: data.cause,
-    //     symptoms: data.symptoms,
-    //     impact: data.impact,
-    //     control: data.control,
-    //     slug: data.name.toLowerCase().replace(/\s/g, "-"),
-    //     image: getSupabasePublicUrl(imageData.fullPath),
-    //   },
-    // });
     return {
       ...initialDiseaseFormState,
       db: "success",
@@ -1377,7 +1411,7 @@ export async function editProduct(
     };
   }
 
-  // Check if the product with the same details exists but is not the current product
+
   const existingProductSupplier = await prisma.productSupplier.findFirst({
     where: {
       product: {

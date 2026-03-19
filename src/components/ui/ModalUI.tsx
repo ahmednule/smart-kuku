@@ -1,31 +1,22 @@
 import {
   Button,
-  Input,
   Link,
   Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
-  Select,
-  SelectItem,
+  cn,
   useDisclosure,
 } from "@nextui-org/react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import ImageUpload from "./ImageUpload";
 import { useFormState } from "react-dom";
-import { scanPestImage, scanDiseaseImage, getTags } from "@/lib/actions";
+import { scanPestImage, scanDiseaseImage } from "@/lib/actions";
 import { ScanStatus } from "@/lib/constants";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import ChipUI from "./ChipUI";
 import ScanResponse from "./ScanResponse";
 import ScanButton from "./ScanButton";
-
-// Define the type for tag objects
-type Tag = {
-  tag: string | null;
-};
 
 const ModalUI = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -53,18 +44,15 @@ const ModalUI = () => {
       ? false
       : true;
 
-  const [choice, setChoice] = useState("");
-
-  const [tags, setTags] = useState<Tag[]>([]);
-
-  useEffect(() => {
-    getTags().then((tags) => setTags(tags || []));
-  }, []);
+    const [choice, setChoice] = useState<"pest" | "disease">("pest");
 
   return (
     <>
       <Button
-        onPress={onOpen}
+          onPress={() => {
+            setChoice("pest");
+            onOpen();
+          }}
         className="md:px-4 md:py-5 md:text-lg backdrop-blur-sm border bg-emerald-400/20 border-emerald-500/20 text-white rounded-full"
       >
         Start Farm Check
@@ -86,24 +74,31 @@ const ModalUI = () => {
                 <h2 className="text-emerald-900 text-xl font-bold">AI SCAN</h2>
               </ModalHeader>
               <ModalBody>
-                {!choice && (
-                  <>
-                    <p>Choose what you want to check first.</p>
-                    <Button className="mx-10" onPress={() => setChoice("pest")}>
-                      Check Pests
-                    </Button>
-                    <Button
-                      className="mx-10"
-                      onPress={() => setChoice("disease")}
-                    >
-                      Check Diseases
-                    </Button>
-                  </>
-                )}
+                <div className="grid grid-cols-2 gap-3 mb-1">
+                  <Button
+                    className={cn({
+                      "bg-emerald-600 text-white": choice === "pest",
+                      "bg-emerald-100 text-emerald-700": choice !== "pest",
+                    })}
+                    onPress={() => setChoice("pest")}
+                  >
+                    Pest Scan
+                  </Button>
+                  <Button
+                    className={cn({
+                      "bg-emerald-600 text-white": choice === "disease",
+                      "bg-emerald-100 text-emerald-700": choice !== "disease",
+                    })}
+                    onPress={() => setChoice("disease")}
+                  >
+                    Disease Scan
+                  </Button>
+                </div>
+
                 {choice === "pest" && (
                   <>
                     <p className="text-emerald-700">
-                      Upload an image of a pest to start the diagnosis process.
+                      Upload one clear image of the pest to start diagnosis.
                     </p>
                     <form action={pestFormAction} className="flex flex-col">
                       <ImageUpload name="image" />
@@ -130,38 +125,10 @@ const ModalUI = () => {
                 {choice === "disease" && (
                   <>
                     <p className="text-emerald-700">
-                      Upload an image of a disease to start the diagnosis process.
+                      Upload one clear image of the disease to start diagnosis.
                     </p>
                     <form action={diseaseFormAction} className="flex flex-col">
                       <ImageUpload name="image" />
-                      <div className="flex flex-col gap-5 mb-8 items-center">
-                        <div className="flex gap-3 max-w-md justify-center items-center mx-auto">
-                          <Input
-                            name="tag"
-                            label="Enter short tag"
-                            color="success"
-                          />
-                          <FontAwesomeIcon
-                            title="A tag is used to identify and group exact plants you diagnosed for a disease."
-                            className="text-gray-500"
-                            icon={faQuestionCircle}
-                          />
-                        </div>
-                        <span>OR</span>
-                        <Select
-                          name="selectTag"
-                          color="success"
-                          items={tags}
-                          label="Select an existing tag"
-                          className="max-w-xs"
-                        >
-                          {(tag) => (
-                            <SelectItem key={tag?.tag || ""}>
-                              {tag?.tag || ""}
-                            </SelectItem>
-                          )}
-                        </Select>
-                      </div>
                       <ScanButton />
                       <ChipUI
                         formState={diseaseFormState}
@@ -184,7 +151,6 @@ const ModalUI = () => {
                 )}
               </ModalBody>
               <ModalFooter>
-                {choice && <Button onPress={() => setChoice("")}>Back</Button>}
                 <Button color="danger" variant="light" onPress={onClose}>
                   Close
                 </Button>
