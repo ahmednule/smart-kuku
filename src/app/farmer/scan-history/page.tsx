@@ -4,29 +4,64 @@ import ModalUI from "@/components/ui/ModalUI";
 import SectionHeader from "@/components/ui/SectionHeader";
 import { Role } from "@/generated/prisma/enums";
 import prisma from "@/lib/prisma";
+import { deleteScan } from "@/lib/actions";
 import { getServerSupabase, SUPABASE_IMAGES_BUCKET } from "@/lib/supabase";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
-const extractMainPoints = (description: string) => {
-  const cleaned = description
-    .replace(/\r/g, "")
-    .replace(/\*\*/g, "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+const ALL_SECTION_HEADINGS =
+  "Description|Damage|Control|Treatment|Cause|Symptoms|Impact";
 
-  const points = cleaned
-    .filter((line) =>
-      /^(Description|Damage|Control|Treatment|Cause|Symptoms|Impact)\b/i.test(
-        line
-      )
-    )
-    .slice(0, 4);
+const extractSectionText = (description: string, sectionNames: string[]) => {
+  const normalized = description.replace(/\r/g, "").replace(/\*\*/g, "");
+  const sectionPattern = sectionNames.join("|");
+  const regex = new RegExp(
+    `(?:^|\\n)\\s*(?:${sectionPattern})\\s*:?\\s*([\\s\\S]*?)(?=\\n\\s*(?:${ALL_SECTION_HEADINGS})\\s*:|$)`,
+    "i"
+  );
+  const match = normalized.match(regex);
 
-  if (points.length > 0) return points;
+  if (!match?.[1]) return "";
 
-  return cleaned.slice(0, 3);
+  return match[1]
+    .replace(/\n+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const summarizeText = (value: string, fallback: string) => {
+  if (!value) return fallback;
+
+  const firstSentences = value
+    .split(/(?<=[.!?])\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(" ")
+    .trim();
+
+  if (firstSentences) return firstSentences;
+  return value.slice(0, 220);
+};
+
+const getScanSummary = (description: string) => {
+  const conditionRaw =
+    extractSectionText(description, ["Symptoms", "Damage", "Impact"]) ||
+    extractSectionText(description, ["Description", "Cause"]);
+
+  const treatmentRaw =
+    extractSectionText(description, ["Treatment"]) ||
+    extractSectionText(description, ["Control"]);
+
+  return {
+    conditionSummary: summarizeText(
+      conditionRaw,
+      "No clear symptom summary provided for this scan."
+    ),
+    treatmentSummary: summarizeText(
+      treatmentRaw,
+      "No treatment guidance was provided in this scan output."
+    ),
+  };
 };
 
 const normalizeScanImageUrl = (url: string) =>
@@ -170,7 +205,7 @@ const FarmerScanHistoryPage = async () => {
       {totalScans > 0 && (
         <div className="space-y-4">
           {scansWithImageUrl.map((scan) => {
-            const points = extractMainPoints(scan.description);
+            const summary = getScanSummary(scan.description);
             return (
               <article
                 key={scan.id}
@@ -187,7 +222,8 @@ const FarmerScanHistoryPage = async () => {
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-lg font-semibold text-emerald-900">{scan.name}</h3>
                       <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800">
                         {scan.type}
@@ -195,14 +231,37 @@ const FarmerScanHistoryPage = async () => {
                       <span className="text-xs text-emerald-700">
                         {new Date(scan.createdAt).toLocaleString()}
                       </span>
+                      </div>
+
+                      <form
+                        action={async () => {
+                          "use server";
+                          await deleteScan(scan.id);
+                        }}
+                      >
+                        <button
+                          type="submit"
+                          className="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
+                        >
+                          Delete
+                        </button>
+                      </form>
                     </div>
 
-                    <p className="text-sm font-semibold text-emerald-900">Main points from this scan</p>
-                    <ul className="list-disc pl-5 text-sm text-emerald-800 space-y-1">
-                      {points.map((point) => (
-                        <li key={point}>{point}</li>
-                      ))}
-                    </ul>
+                    <div className="space-y-2 text-sm text-emerald-800">
+                      <p>
+                        <span className="font-semibold text-emerald-900">
+                          What the bird was suffering from:
+                        </span>{" "}
+                        {summary.conditionSummary}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-emerald-900">
+                          Recommended treatment:
+                        </span>{" "}
+                        {summary.treatmentSummary}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </article>

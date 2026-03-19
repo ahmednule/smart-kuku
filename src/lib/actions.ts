@@ -167,6 +167,36 @@ const ensureCustomerRecord = async (userId: string) => {
   });
 };
 
+const getObjectPathFromStorageUrl = (url: string) => {
+  const normalizedUrl = url.replace(
+    "/storage/v1/object/public/images/images/",
+    "/storage/v1/object/public/images/"
+  );
+
+  try {
+    const parsed = new URL(normalizedUrl);
+    const publicPrefix = `/storage/v1/object/public/${SUPABASE_IMAGES_BUCKET}/`;
+    const signedPrefix = `/storage/v1/object/sign/${SUPABASE_IMAGES_BUCKET}/`;
+
+    if (parsed.pathname.includes(publicPrefix)) {
+      return parsed.pathname.split(publicPrefix)[1] || "";
+    }
+
+    if (parsed.pathname.includes(signedPrefix)) {
+      return parsed.pathname.split(signedPrefix)[1] || "";
+    }
+  } catch {
+    // fall through
+  }
+
+  const normalizedPath = normalizedUrl.replace(/^\/+/, "");
+  const bucketPrefix = `${SUPABASE_IMAGES_BUCKET}/`;
+
+  return normalizedPath.startsWith(bucketPrefix)
+    ? normalizedPath.slice(bucketPrefix.length)
+    : normalizedPath;
+};
+
 const getGeminiScanErrorMessage = (error: unknown): string => {
   const status =
     typeof error === "object" &&
@@ -503,8 +533,43 @@ export const deleteScan = async (id: string) => {
   const session = await auth();
   const user = session?.user;
 
-  if (user?.role !== Role.CUSTOMER)
-    throw new Error("You must be a customer to delete your previous scan");
+  if (!user?.id) {
+    throw new Error("You must be signed in to delete a scan");
+  }
+
+  const scan = await prisma.scan.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      customerId: true,
+      url: true,
+    },
+  });
+
+  if (!scan) {
+    throw new Error("Scan not found");
+  }
+
+  const isOwner = scan.customerId === user.id;
+  const canDeleteAsOwner =
+    isOwner && (user.role === Role.CUSTOMER || user.role === Role.FARMER);
+
+  if (!canDeleteAsOwner && user.role !== Role.ADMIN) {
+    throw new Error("You are not allowed to delete this scan");
+  }
+
+  const objectPath = getObjectPathFromStorageUrl(scan.url);
+  if (objectPath) {
+    const { error: deleteStorageError } = await getSupabaseAdminClient().storage
+      .from(SUPABASE_IMAGES_BUCKET)
+      .remove([objectPath]);
+
+    if (deleteStorageError) {
+      console.warn(
+        `Failed to delete scan image from storage: ${deleteStorageError.message}`
+      );
+    }
+  }
 
   try {
     await prisma.scan.delete({
@@ -518,6 +583,7 @@ export const deleteScan = async (id: string) => {
   }
 
   revalidatePath("/customer/scan-history");
+  revalidatePath("/farmer/scan-history");
 };
 
 export const addPest = async (
