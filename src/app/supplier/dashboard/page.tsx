@@ -1,9 +1,7 @@
 import { auth } from "@/auth";
 import UserDataChart from "@/components/page/admin-page/Charts";
 import MobileNav from "@/components/ui/MobileNav";
-import { GEOLOCATION_API } from "@/lib/constants";
 import prisma from "@/lib/prisma";
-import { IpInfo } from "@/lib/types";
 import {
   faArrowRight,
   faBoxes,
@@ -19,14 +17,7 @@ const SupplierDashboard = async () => {
   const users = await prisma.user.findMany();
   const session = await auth();
   const user = session!.user;
-
-  const res = await fetch(
-    `https://api.ipgeolocation.io/ipgeo?apiKey=${GEOLOCATION_API}`
-  );
-
-  const {
-    currency: { symbol },
-  }: IpInfo = await res.json();
+  const symbol = "KSh";
 
   const product = await prisma.product.findMany({
       where: {

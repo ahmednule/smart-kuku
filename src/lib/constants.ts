@@ -195,5 +195,3 @@ export const FARMER_ROUTES = [
 ];
 
 export const initialPriceRange = [0, 10000];
-
-export const GEOLOCATION_API = process.env.GEOLOCATION_API;

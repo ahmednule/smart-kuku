@@ -12,10 +12,11 @@ useEffect(() => {
   const fetchLocationDetails = async (latitude: number, longitude: number) => {
     try {
       const response = await fetch(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+        `/api/geolocation?lat=${latitude}&lon=${longitude}`
       );
       if (!response.ok) {
-        throw new Error("Failed to fetch location details");
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.message || "Failed to fetch location details");
       }
       const data = await response.json();
       setLocation({

@@ -48,15 +48,16 @@ export const FEATURES_DATA: TFeatureItem[] = [
 ];
 
 export const PARTNERSHIPS_DATA = [
-  { src: "/assets/images/nasa.svg", alt: "NASA logo", name: "NASA" },
-  { src: "/assets/images/meta.svg", alt: "Meta logo", name: "Meta" },
-  { src: "/assets/images/google.svg", alt: "Gemini logo", name: "Gemini" },
   {
-    src: "/assets/images/microsoft.svg",
-    alt: "Microsoft logo",
-    name: "Microsoft",
+    src: "/assets/images/google.svg",
+    alt: "Google Developer Club logo",
+    name: "Google Developer Club",
   },
-  { src: "/assets/images/google.svg", alt: "Google logo", name: "Google" },
+  {
+    src: "/assets/images/mku.svg",
+    alt: "Mount Kenya University logo",
+    name: "Mount Kenya University",
+  },
 ];
 
 export const FAQ_DATA = [
