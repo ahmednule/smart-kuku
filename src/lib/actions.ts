@@ -29,8 +29,6 @@ import {
   RegisterSupplierForm,
   ResourceType,
 } from "./types";
-import { Resend } from "resend";
-import { EmailTemplate } from "@/components/ui/EmailTemplate";
 import { GoogleGenAI } from "@google/genai";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
@@ -44,7 +42,7 @@ import {
   getResourceName,
 } from "./utils";
 import { redirect } from "next/navigation";
-import type { ReactElement } from "react";
+import nodemailer from "nodemailer";
 
 const supabase = getServerSupabase();
 const GEMINI_MODEL = "gemini-2.0-flash";
@@ -60,6 +58,14 @@ const getGoogleApiKey = () => {
 };
 
 const gemini = new GoogleGenAI({ apiKey: getGoogleApiKey() });
+
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
 const getModelText = (response: any): string => {
   const text =
@@ -289,19 +295,49 @@ export const sendEmail = async (
   }
 
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
-      from: "Contact <onboarding@resend.dev>",
-      to: process.env.ORG_EMAIL!,
-      subject: `Contact form submission from ${data.name}`,
-      react: EmailTemplate({
-        name: data.name,
-        email: data.email,
-        message: data.message,
-      }) as ReactElement,
-      reply_to: data.email,
-      text: `Contact form submission from ${data.name}. Please view this email in an HTML-compatible email client.`,
+    const orgEmail = process.env.ORG_EMAIL ?? process.env.ORG_EMAI;
+    const appPassword = process.env.APP_PASSWORD;
+
+    if (!orgEmail || !appPassword) {
+      return {
+        ...initialFormState,
+        db: "Missing APP_PASSWORD or ORG_EMAIL/ORG_EMAI in environment variables",
+      };
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: orgEmail,
+        pass: appPassword,
+      },
     });
+
+    await transporter.sendMail({
+      from: `KukuSmart Contact <${orgEmail}>`,
+      to: orgEmail,
+      replyTo: data.email,
+      subject: `Contact form submission from ${data.name}`,
+      text: `Name: ${data.name}\nEmail: ${data.email}\n\nMessage:\n${data.message}`,
+      html: `
+        <div style="background-color:#064e3b;padding:32px 12px;font-family:Arial,Helvetica,sans-serif;">
+          <div style="max-width:680px;margin:0 auto;background:#ffffff;border-radius:12px;padding:28px;box-shadow:0 10px 25px rgba(0,0,0,0.14);">
+            <h2 style="margin:0 0 10px;color:#0a0e14;font-size:24px;line-height:1.25;">KukuSmart Contact Form Submission</h2>
+            <p style="margin:0 0 18px;color:#475569;">You have a new contact form submission:</p>
+
+            <p style="margin:0 0 4px;color:#1f2937;"><strong>Name:</strong></p>
+            <p style="margin:0 0 14px;color:#475569;">${escapeHtml(data.name)}</p>
+
+            <p style="margin:0 0 4px;color:#1f2937;"><strong>Email:</strong></p>
+            <p style="margin:0 0 14px;color:#475569;">${escapeHtml(data.email)}</p>
+
+            <p style="margin:0 0 4px;color:#1f2937;"><strong>Message:</strong></p>
+            <p style="margin:0;white-space:pre-wrap;line-height:1.6;color:#475569;">${escapeHtml(data.message)}</p>
+          </div>
+        </div>
+      `,
+    });
+
     return {
       ...initialFormState,
       db: "success",

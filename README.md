@@ -46,8 +46,8 @@ Required keys:
 - AUTH_GITHUB_SECRET
 - GOOGLE_API_KEY
 - GOOGLE_MAPS_KEY
-- RESEND_API_KEY
 - ORG_EMAIL
+- APP_PASSWORD
 
 ## Local Development
 
