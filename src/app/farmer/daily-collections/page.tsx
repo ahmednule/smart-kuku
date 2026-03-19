@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import DailyCollectionsVoiceForm from "@/components/page/farmer-page/DailyCollectionsVoiceForm";
 import MobileNav from "@/components/ui/MobileNav";
 import { MetricSource, Role } from "@/generated/prisma/enums";
 import prisma from "@/lib/prisma";
@@ -127,108 +128,7 @@ const DailyCollectionsPage = async ({ searchParams }: DailyCollectionsPageProps)
           </p>
         </div>
       ) : (
-        <form action={createDailyCollection} className="rounded-xl border border-emerald-200 bg-white p-6 shadow-sm space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-medium text-emerald-900">
-              Farm
-              <select
-                name="farmId"
-                defaultValue={farms[0].id}
-                className="mt-1 w-full rounded-lg border border-emerald-200 px-3 py-2 text-emerald-900"
-              >
-                {farms.map((farm) => (
-                  <option key={farm.id} value={farm.id}>
-                    {farm.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="text-sm font-medium text-emerald-900">
-              Flock (optional)
-              <select
-                name="flockId"
-                defaultValue=""
-                className="mt-1 w-full rounded-lg border border-emerald-200 px-3 py-2 text-emerald-900"
-              >
-                <option value="">All flocks / Not specific</option>
-                {farms.flatMap((farm) =>
-                  farm.flocks.map((flock) => (
-                    <option key={flock.id} value={flock.id}>
-                      {farm.name} - {flock.name}
-                    </option>
-                  ))
-                )}
-              </select>
-            </label>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <label className="text-sm font-medium text-emerald-900">
-              Eggs collected
-              <input
-                type="number"
-                name="eggsCollected"
-                min={0}
-                required
-                className="mt-1 w-full rounded-lg border border-emerald-200 px-3 py-2 text-emerald-900"
-                placeholder="e.g. 320"
-              />
-            </label>
-
-            <label className="text-sm font-medium text-emerald-900">
-              Feed used (kg)
-              <input
-                type="number"
-                step="0.1"
-                min={0}
-                name="feedKg"
-                className="mt-1 w-full rounded-lg border border-emerald-200 px-3 py-2 text-emerald-900"
-                placeholder="e.g. 45"
-              />
-            </label>
-
-            <label className="text-sm font-medium text-emerald-900">
-              Water used (L)
-              <input
-                type="number"
-                step="0.1"
-                min={0}
-                name="waterLiters"
-                className="mt-1 w-full rounded-lg border border-emerald-200 px-3 py-2 text-emerald-900"
-                placeholder="e.g. 210"
-              />
-            </label>
-
-            <label className="text-sm font-medium text-emerald-900">
-              Mortality count
-              <input
-                type="number"
-                min={0}
-                name="mortalityCount"
-                className="mt-1 w-full rounded-lg border border-emerald-200 px-3 py-2 text-emerald-900"
-                placeholder="e.g. 2"
-              />
-            </label>
-          </div>
-
-          <label className="text-sm font-medium text-emerald-900 block">
-            Notes (optional)
-            <textarea
-              name="notes"
-              rows={3}
-              className="mt-1 w-full rounded-lg border border-emerald-200 px-3 py-2 text-emerald-900"
-              placeholder="Any observation for today..."
-            />
-          </label>
-
-          <button
-            type="submit"
-            className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700"
-          >
-            Save daily collection
-          </button>
-        </form>
+        <DailyCollectionsVoiceForm action={createDailyCollection} farms={farms} />
       )}
 
       <div className="rounded-xl border border-emerald-200 bg-white p-6 shadow-sm">

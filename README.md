@@ -1,7 +1,7 @@
 # SmartKuku
 KukuSmart is a poultry-focused farm assistant built with Next.js. It combines farm workflows (resources, scans, supplier/store flows) with Gemini-powered assistant features for farmer Q and A, image-based checks, and progress guidance.
 
-Built for MKU AI Hackathon 2025 (School of Computing and Informatics).
+Built for MKU AI Hackathon 2026 (School of Computing and Informatics).
 
 Event context:
 - Mount Kenya University, School of Computing and Informatics
