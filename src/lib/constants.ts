@@ -183,6 +183,11 @@ export const FARMER_ROUTES = [
     icon: faClockRotateLeft,
   },
   {
+    path: "/farmer/daily-collections",
+    value: "Daily Collections",
+    icon: faLineChart,
+  },
+  {
     path: "/farmer/resources",
     value: "Resources",
     icon: faFlask,

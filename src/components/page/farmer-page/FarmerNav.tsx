@@ -18,7 +18,7 @@ const FarmerNav = ({ needsFarmSetup }: { needsFarmSetup: boolean }) => {
       <ul className="space-y-4">
         {FARMER_ROUTES.map((route, index) => (
           <React.Fragment key={route.path}>
-            {index === 3 && <Divider className="my-2 bg-emerald-600" />}
+            {route.path === "/farmer/resources" && <Divider className="my-2 bg-emerald-600" />}
             <li>
               <Button
                 href={route.path}
