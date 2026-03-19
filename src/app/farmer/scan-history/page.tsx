@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import DeleteScanButton from "@/components/ui/DeleteScanButton";
 import MobileNav from "@/components/ui/MobileNav";
 import ModalUI from "@/components/ui/ModalUI";
 import SectionHeader from "@/components/ui/SectionHeader";
@@ -233,19 +234,13 @@ const FarmerScanHistoryPage = async () => {
                       </span>
                       </div>
 
-                      <form
+                      <DeleteScanButton
+                        confirmMessage="Delete this scan and its image permanently?"
                         action={async () => {
                           "use server";
                           await deleteScan(scan.id);
                         }}
-                      >
-                        <button
-                          type="submit"
-                          className="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"
-                        >
-                          Delete
-                        </button>
-                      </form>
+                      />
                     </div>
 
                     <div className="space-y-2 text-sm text-emerald-800">
