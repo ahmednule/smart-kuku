@@ -73,12 +73,6 @@ http://localhost:3000
 - npm run start
 - npm run lint
 
-## Notes
-
-- The app now uses Gemini, not OpenAI.
-- Prisma enums used by app code come from src/generated/prisma/enums.ts.
-- If auth endpoints fail with MissingSecret, set AUTH_SECRET in .env.
-
 ## Troubleshooting
 
 If you see Prisma runtime or module errors during dev:
